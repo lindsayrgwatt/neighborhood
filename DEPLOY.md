@@ -22,7 +22,9 @@ ImportError: No module named collectstatic
 
 ### 1.
 
-Running `fab prepare_deployment` from within the `neighborhood/neighborhood` directory will run all the tests and sync to a github repository. You'll need to set up your own repository, otherwise comment out the lines of `fabfile.py` that push to github.
+Running `fab prepare_deployment` from within the top level directory will run all the tests and sync to a github repository. You'll need to set up your own repository, otherwise comment out the lines of `fabfile.py` that push to github.
+
+Note that this file is located in the top level directory as `git` can't commit files from higher level directories that where it is called.
 
 ### 2.
 
