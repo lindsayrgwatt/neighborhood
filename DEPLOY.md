@@ -20,7 +20,13 @@ ImportError: No module named collectstatic
 
 ## local Gotchas
 
-running `fab prepare_deployment` from within the `neighborhood/neighborhood` directory will run all the tests and sync to a github repository. You'll need to set up your own repository, otherwise comment out the lines of `fabfile.py` that push to github.
+### 1.
+
+Running `fab prepare_deployment` from within the `neighborhood/neighborhood` directory will run all the tests and sync to a github repository. You'll need to set up your own repository, otherwise comment out the lines of `fabfile.py` that push to github.
+
+### 2.
+
+You need to create a spatial database in order to use this app. PostGIS 1.5.2 (not 2.0) must be installed. This also means that you must use a version of PostgreSQL < 9.2 as PostGIS 1.5.2 isn't compatible with 9.2 or later. On a Mac, this can lead to [implementation](http://mechanicalgirl.com/post/installing-postgis-homebrew/) [headaches](https://gist.github.com/fcurella/3188632).
 
 ## dotCloud Gotchas
 
