@@ -18,6 +18,10 @@ ImportError: No module named collectstatic
 
 (Type `python manage.py help` and `python manage.py help --settings=neighborhood.settings.local` and you'll see the difference in the `Available subcommands` section)
 
+## local Gotchas
+
+running `fab prepare_deployment` from within the `neighborhood/neighborhood` directory will run all the tests and sync to a github repository. You'll need to set up your own repository, otherwise comment out the lines of `fabfile.py` that push to github.
+
 ## dotCloud Gotchas
 
 If you don't know anything about dotCloud, please read how to [get started with Django on dotCloud](http://docs.dotcloud.com/tutorials/python/django/).
