@@ -18,7 +18,10 @@ mapping = {
 }
 
 def run(verbose=True):
-    lm = LayerMapping(Neighborhood, neighborhood_shape, mapping)
-    lm.save(strict=True, verbose=verbose)
-    Neighborhood.objects.exclude(city='Seattle').delete()
-    print "There are %d neighborhoods in Seattle" % len(Neighborhood.objects.all())
+    if len(Neighborhood.objects.all()) == 0:
+        lm = LayerMapping(Neighborhood, neighborhood_shape, mapping)
+        lm.save(strict=True, verbose=verbose)
+        Neighborhood.objects.exclude(city='Seattle').delete()
+        print "There are %d neighborhoods in Seattle" % len(Neighborhood.objects.all())
+    else:
+        print "Neighborhood shapefile already loaded (at least one neighborhood exists). Delete existing records via admin tool"
