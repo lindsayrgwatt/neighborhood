@@ -19,3 +19,5 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+Note that the neighborhood boundaries are provided by [Zillow](http://www.zillow.com/howto/api/neighborhood-boundaries.htm) and shared under a [Creative Commons](http://creativecommons.org/licenses/by-sa/3.0/) license. By using this software, you are agreeing to this license.
