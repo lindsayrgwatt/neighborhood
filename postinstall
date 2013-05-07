@@ -1,5 +1,9 @@
 #!/bin/sh
 python neighborhood/manage.py syncdb --settings=neighborhood.settings.prod --noinput
+python neighborhood/manage.py migrate hoods --settings=neighborhood.settings.prod
+python neighborhood/manage.py migrate data --settings=neighborhood.settings.prod
+
 python mkadmin.py
+
 mkdir -p /home/dotcloud/data/media /home/dotcloud/volatile/static
 python neighborhood/manage.py collectstatic --settings=neighborhood.settings.prod --noinput

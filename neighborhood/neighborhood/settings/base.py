@@ -1,7 +1,14 @@
 import os
+import djcelery
+
+from datetime import timedelta
+from celery.schedules import crontab
+
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(os.path.dirname(settings_dir))
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(settings_dir)))
+
+djcelery.setup_loader()
 
 # Django settings for neighborhood project.
 ADMINS = (
@@ -14,11 +21,9 @@ MANAGERS = ADMINS
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = []
 
-# Local time zone for this installation. Choices can be found here:
-# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
-# although not all choices may be available on all operating systems.
-# In a Windows environment this must be set to your system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'US/Pacific'
+# Note that if you change time zone, need to update celery scheduler:
+# http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -93,38 +98,25 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'south',
-    'hoods',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.gis',
+    'south',
+    'djcelery',
+    'hoods',
+    'data',
 )
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error when DEBUG=False.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
+CELERY_IMPORTS = ("data.tasks", )
+CELERYBEAT_SCHEDULE = {
+    'get-fire-data': {
+        'task': 'tasks.get_fire',
+        'schedule': crontab(minute="*/1"),
+        #'schedule': crontab(minute='0', hour='*/6'),
     },
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
+    'add-numbers': {
+        'task': 'tasks.add',
+        'schedule': crontab(minute="*/1"),
+        'args': (16,16),
     }
 }
