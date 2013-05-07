@@ -4,3 +4,5 @@ db:
   type: postgis
 data:
   type: redis
+workers:
+  type: python-worker

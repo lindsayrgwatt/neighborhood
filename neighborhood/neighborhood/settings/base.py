@@ -111,8 +111,8 @@ CELERY_IMPORTS = ("data.tasks", )
 CELERYBEAT_SCHEDULE = {
     'get-fire-data': {
         'task': 'tasks.get_fire',
-        'schedule': crontab(minute="*/1"),
-        #'schedule': crontab(minute='0', hour='*/6'),
+        #'schedule': crontab(minute="*/1"),
+        'schedule': crontab(minute='0', hour='*/6'),
     },
     'add-numbers': {
         'task': 'tasks.add',

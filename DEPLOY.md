@@ -2,7 +2,7 @@
 
 This project uses a lot of different libraries to run; I found all sorts of "gotchas" crept up while creating and deploying, so I thought I'd document them here.
 
-## general Gotchas
+## General Gotchas
 
 ### 1.
 
@@ -57,7 +57,7 @@ If you've never used South before, here's what you need to know:
   * If you run `fab migrate_local` you can invoke all the local migrations
 * South intercepts `syncdb` to make sure that any apps using South (i.e., have the folder `migrations`) aren't updated by the `sycndb` process
 
-## local Gotchas
+## localhost Gotchas
 
 ### 1.
 
@@ -71,7 +71,7 @@ You need to create a spatial database in order to use this app. PostGIS 1.5.2 (n
 
 ### 3.
 
-Run the celery scheduler locally through this command:
+Run the celery scheduler locally through this command in a new Terminal window:
 
 `python manage.py celery worker -B --loglevel=info --settings=neighborhood.settings.local`
 
