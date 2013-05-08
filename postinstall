@@ -6,6 +6,7 @@ dotcloud_get_env() {
 
 setup_django() {
     python neighborhood/manage.py syncdb --settings=neighborhood.settings.prod --noinput
+    python neighborhood/manage.py migrate djcelery --settings=neighborhood.settings.prod
     python neighborhood/manage.py migrate hoods --settings=neighborhood.settings.prod
     python neighborhood/manage.py migrate data --settings=neighborhood.settings.prod
 
