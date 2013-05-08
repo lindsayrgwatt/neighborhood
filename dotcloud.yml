@@ -1,8 +1,12 @@
 www:
   type: python
+  config:
+    python_version: v2.7
 db:
   type: postgis
 data:
   type: redis
 workers:
   type: python-worker
+  config:
+    python_version: v2.7

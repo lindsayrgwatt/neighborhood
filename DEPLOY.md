@@ -83,6 +83,8 @@ or
 
 If you don't know anything about dotCloud, please read how to [get started with Django on dotCloud](http://docs.dotcloud.com/tutorials/python/django/) then [add geoDjango](http://docs.dotcloud.com/tutorials/python/geodjango/), a [Celery queue](http://docs.dotcloud.com/tutorials/python/django-celery/) powered by [Redis](http://docs.dotcloud.com/services/redis/). Any changes to these are noted below.
 
+Note that after installation, dotCloud runs the `postinstall` script. Since we are activating two services (`python` and `python-worker`) there will actually be two installs and the script will run twice. Hence the conditional logic to make sure that only the appropriate code is run per install.
+
 ### 1.
 
 In order to run on dotCloud you'll need to set two environment variables: `DB_POSTGIS_USER` and `DB_POSTGIS_PASSWORD`. Make sure you know [how to set environment variables](http://docs.dotcloud.com/guides/environment/).

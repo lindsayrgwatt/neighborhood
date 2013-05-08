@@ -8,8 +8,6 @@ settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(os.path.dirname(settings_dir))
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(settings_dir)))
 
-djcelery.setup_loader()
-
 # Django settings for neighborhood project.
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -107,12 +105,15 @@ INSTALLED_APPS = (
     'data',
 )
 
+djcelery.setup_loader()
+
 CELERY_IMPORTS = ("data.tasks", )
+CELERY_DISABLE_RATE_LIMITS = True
 CELERYBEAT_SCHEDULE = {
     'get-fire-data': {
         'task': 'tasks.get_fire',
-        #'schedule': crontab(minute="*/1"),
-        'schedule': crontab(minute='0', hour='*/6'),
+        'schedule': crontab(minute="*/1"),
+        #'schedule': crontab(minute='0', hour='*/6'),
     },
     'add-numbers': {
         'task': 'tasks.add',

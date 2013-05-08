@@ -1,9 +1,38 @@
 #!/bin/sh
-python neighborhood/manage.py syncdb --settings=neighborhood.settings.prod --noinput
-python neighborhood/manage.py migrate hoods --settings=neighborhood.settings.prod
-python neighborhood/manage.py migrate data --settings=neighborhood.settings.prod
 
-python mkadmin.py
+dotcloud_get_env() {
+    sed -n "/$1/ s/.*: \"\(.*\)\".*/\1/p" < "/home/dotcloud/environment.json"
+}
 
-mkdir -p /home/dotcloud/data/media /home/dotcloud/volatile/static
-python neighborhood/manage.py collectstatic --settings=neighborhood.settings.prod --noinput
+setup_django() {
+    python neighborhood/manage.py syncdb --settings=neighborhood.settings.prod --noinput
+    python neighborhood/manage.py migrate hoods --settings=neighborhood.settings.prod
+    python neighborhood/manage.py migrate data --settings=neighborhood.settings.prod
+
+    python mkadmin.py
+
+    mkdir -p /home/dotcloud/data/media /home/dotcloud/volatile/static
+    python neighborhood/manage.py collectstatic --settings=neighborhood.settings.prod --noinput
+}
+
+setup_django_celery() {
+cat > /home/dotcloud/current/supervisord.conf << EOF
+[program:djcelery]
+directory = /home/dotcloud/current/
+command = python neighborhood/manage.py celeryd -B -l info c 1 --settings=neighborhood.settings.prod
+stderr_logfile = /var/log/supervisor/%(program_name)s_error.log
+stdout_logfile = /var/log/supervisor/%(program_name)s.log
+
+[program:celerycam]
+directory = /home/dotcloud/current/
+command = python neighborhood/manage.py celerycam --settings=neighborhood.settings.prod
+stderr_logfile = /var/log/supervisor/%(program_name)s_error.log
+stdout_logfile = /var/log/supervisor/%(program_name)s.log
+EOF
+}
+
+if [ `dotcloud_get_env DOTCLOUD_SERVICE_NAME` = workers ] ; then
+    setup_django_celery
+else
+    setup_django
+fi
