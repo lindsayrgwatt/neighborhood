@@ -138,3 +138,16 @@ Please change the password for the `admin` user after you deploy. Since the pass
 ### 5.
 
 You may have an error running initial migrations that create the geo features on tables. If they fail, make sure that your database user has sufficient permissions to access the tables `geometry_columns` and `spatial_ref_sys` (`GRANT ALL ON geometry_columns TO admin`)
+
+### 6.
+
+Note that the `postinstall` script includes migrations for `djcelery`. This is critical as if you don't include this, you won't get any database tables created and the queue will fail.
+
+### 7.
+
+The Celery workers will not start on dotCloud with the default memory levels (you'll receive an email with an Out of Memory error and then see cryptic `WorkerLostError: Could not start worker processes` message plus `SIGKILL` messages in the logs).
+
+Scale to 128MB by typing this command:
+```
+dotcloud scale workers:memory=128M
+```
