@@ -115,9 +115,14 @@ CELERYBEAT_SCHEDULE = {
         #'schedule': crontab(minute="*/1"),
         'schedule': crontab(minute='0', hour='*/6'),
     },
-    'add-numbers': {
-        'task': 'tasks.add',
-        'schedule': crontab(minute="*/1"),
-        'args': (16,16),
+    'get-land-use-data': {
+        'task': 'tasks.get_land_use',
+        #'schedule': crontab(minute='*/1'),
+        'schedule': crontab(minute='0', hour='*/6'),
+    },
+    'get-building-permit-data': {
+        'task': 'tasks.get_building_permits',
+        #'schedule': crontab(minute='*/1'),
+        'schedule': crontab(minute='0', hour='*/6'),
     }
 }

@@ -26,7 +26,7 @@ ImportError: No module named collectstatic
 
 ## 2.
 
-Django and Celery have some unique undocumented requirements. Biggest one is around making sure that the Celery importer can actually find the named tasks.
+Django and Celery have some unique undocumented requirements. The biggest one is around making sure that the Celery importer can actually find the named tasks.
 
 To make this work, the `base.py` settings file contains the following:
 
@@ -151,3 +151,5 @@ Scale to 128MB by typing this command:
 ```
 dotcloud scale workers:memory=128M
 ```
+
+You'll also likely have to scale the `www` (Python) process to 128M as well.

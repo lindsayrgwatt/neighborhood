@@ -1,11 +1,16 @@
 from celery import task
-from data.load import get_fire_data
+from data.load import get_fire_data, get_land_use_data, get_building_permits_data
 
 @task(name="tasks.get_fire", ignore_result=True)
 def fire_data():
-    get_fire_data()
-    return "get_fire_data() called"
+    return get_fire_data()
 
-@task(name="tasks.add", ignore_result=True)
-def add(x, y):
-    return x + y
+@task(name="tasks.get_land_use", ignore_result=True)
+def land_use_data():
+    return get_land_use_data()
+
+
+@task(name="tasks.get_building_permits", ignore_result=True)
+def building_permit_data():
+    return get_building_permits_data()
+
