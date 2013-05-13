@@ -7,7 +7,7 @@ import logging
 
 from django.contrib.gis.geos import fromstr
 
-from data.models import Fire, LandPermit, BuildingPermit, Violation
+from data.models import Fire, LandPermit, BuildingPermit, Violation, FoodViolation
 
 log = logging.getLogger(__name__)
 
@@ -451,4 +451,93 @@ def get_violations_data():
             log.error("Non-200 code on get_violation_data: %s" % str(response.code))
     except urllib2.HTTPError, e:
         log.error("Error getting code violation data: %s" % e.getcode())
+
+
+def get_food_violations_data():
+    # Loads data of King Count food establishment inspection cases
+    # 
+    # JSON response should be of form:
+    # {
+    # "inspection_result" : "Unsatisfactory",
+    #  "phone" : "(206) 947-1460",
+    #  "inspection_business_name" : "@ The PEAK",
+    #  "zip_code" : "98122",
+    #  "inspection_score" : "25",
+    #  "inspection_type" : "Routine Inspection/Field Review",
+    #  "violation_description" : "3400 - Wiping cloths properly used, stored",
+    #  "violation_record_id" : "IV6475303",
+    #  "inspection_closed_business" : false,
+    #  "city" : "SEATTLE",
+    #  "violation_type" : "blue",
+    #  "inspection_date" : "2013-01-25T00:00:00",
+    #  "inspection_serial_num" : "DA2409066",
+    #  "address" : "401 BROADWAY ",
+    #  "description" : "Seating 13-50 - Risk Category III",
+    #  "name" : "@ The PEAK",
+    #  "business_id" : "PR0071429",
+    #  "longitude" : "-122.3211984964",
+    #  "latitude" : "47.6056239308",
+    #  "program_identifier" : "@ The PEAK",
+    #  "violation_points" : "5"
+    # }
+    
+    base_url = "http://www.datakc.org/resource/f29f-zza5.json"
+    
+    if FoodViolation.objects.count() == 0:
+        timestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
+    else:
+        latest = FoodViolation.objects.latest('inspection_date')
+        tz = pytz.timezone('US/Pacific')
+        timestamp = latest.inspection_date.astimezone(tz).strftime("%F %H:%M:%S")
+        
+    query = "$where=inspection_date > '%s'" % timestamp
+    url = base_url + "?" + query.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
+    
+    try:
+        response = urllib2.urlopen(url)
+        
+        if response.code == 200:
+            all_data = json.load(response)
+            
+            tz = pytz.timezone("US/Pacific")
+            for data in all_data:
+                if 'inspection_result' in data: # Test that it's a valid record before processing
+                    try:
+                        # Only interested in failed inspections in Seattle
+                        if data['inspection_result'] == 'Unsatisfactory' and data['city'].lower() == 'seattle':
+                            point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
+                            
+                            # Date case created
+                            initial_date = datetime.datetime.strptime(data['inspection_date'], "%Y-%m-%dT%H:%M:%S")
+                            updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
+                            date = updated_date
+                            
+                            violation_code = data['violation_description'][0:4]
+                            violation_description = data['violation_description'][7:len(data['violation_description'])]
+                            
+                            # Use get_or_create so that we never risk creating the same incident twice
+                            violation_obj, created = FoodViolation.objects.get_or_create(
+                                                                violation_record_num=data['violation_record_id'],
+                                                                defaults={
+                                                                    'name':data['name'],
+                                                                    'program_identifier':data['program_identifier'],
+                                                                    'inspection_date':date,
+                                                                    'place_description':data['description'],
+                                                                    'address':data['address'],
+                                                                    'business_name':data['inspection_business_name'],
+                                                                    'inspection_type':data['inspection_type'],
+                                                                    'violation_type':data['violation_type'], # Red or blue. Red must be fixed right away
+                                                                    'violation_code':violation_code,
+                                                                    'violation_description':violation_description,
+                                                                    'inspection_serial_num':data['inspection_serial_num'],
+                                                                    'point':point
+                                                                })
+                            
+                    except KeyError, e:
+                        log.error("Missing key %s in food violation data so skipping :: %s" % (e, data['violation_record_id']))
+        
+        else:
+            log.error("Non-200 code on get_food_violations_data: %s" % str(response.code))
+    except urllib2.HTTPError, e:
+        log.error("Error getting food violation data: %s" % e.getcode())
 

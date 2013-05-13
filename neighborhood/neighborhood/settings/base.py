@@ -130,4 +130,9 @@ CELERYBEAT_SCHEDULE = { # The 1 minute crontab is for local testing to make sure
         #'schedule': crontab(minute='*/1'),
         'schedule': crontab(minute='0', hour='*/12'),
     },
+    'get-food-violations-data' : {
+        'task': 'tasks.get_food_violations',
+        #'schedule':crontab(minute='*/1'),
+        'schedule': crontab(minute='0', hour='*/12'),
+    }
 }

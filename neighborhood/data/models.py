@@ -89,3 +89,27 @@ class Violation(models.Model):
     class Meta:
         ordering = ['-case_number']
     
+
+class FoodViolation(models.Model):
+    name = models.CharField(max_length=100)
+    program_identifier = models.CharField(max_length=100)
+    inspection_date = models.DateTimeField()
+    place_description = models.CharField(max_length=50)
+    address = models.CharField(max_length=100)
+    business_name = models.CharField(max_length=100)
+    inspection_type = models.CharField(max_length=50)
+    violation_type = models.CharField(max_length=10)
+    violation_code = models.CharField(max_length=4)
+    violation_description = models.CharField(max_length=250)
+    inspection_serial_num = models.CharField(max_length=10)
+    violation_record_num = models.CharField(max_length=10)
+    
+    point = models.PointField(help_text="Represented as 'POINT(longitude, latitude)'")
+    objects = models.GeoManager()
+    
+    def __unicode__(self):
+        return self.business_name + " :: " + str(self.inspection_date)
+    
+    class Meta:
+        ordering = ['-inspection_date']
+    
