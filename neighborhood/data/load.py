@@ -7,7 +7,7 @@ import logging
 
 from django.contrib.gis.geos import fromstr
 
-from data.models import Fire, LandPermit, BuildingPermit
+from data.models import Fire, LandPermit, BuildingPermit, Violation
 
 log = logging.getLogger(__name__)
 
@@ -73,6 +73,27 @@ FIRE_MAPPING = { # Maps city's fire codes to an aggregate code
     'Motor Vehicle Accident':'Car Accident',
 }
 
+VIOLATION_MAPPING = {
+    'PREMISES':'Other',
+    'PRESALE':'Other',
+    'OTHER CONSTRUCTION':'Other',
+    'NONCONSTRUCTION NOISE':'Noise',
+    'CONSTRUCTION NOISE':'Noise',
+    'MECHANICAL':'Permit Issue',
+    'ELECTRICAL':'Permit Issue',
+    'BUILDING AND PREMISES':'Vacant/Unfit Building',
+    'SIGNS':'Sign Issue',
+    'CONDO/COOP CONVERSION':'Condo Coming',
+    'JUST CAUSE EVICTION':'Eviction',
+    'SITE':'Illegal Construction or Clearing',
+    '':'Other',
+    'VACANT BUILDING':'Vacant/Unfit Building',
+    'HOUSING':'Housing Code Violation',
+    'BUILDING':'Illegal Construction or Clearing',
+    'WEEDS AND VEGETATION':'Vegetation',
+    'ZONING':'Zoning'
+}
+
 def get_fire_data():
     # Loads data of City of Seattle 911 Fire calls
     # 
@@ -127,7 +148,6 @@ def get_fire_data():
                         fmt = '%Y-%m-%d %H:%M:%S %Z%z'
                         initial_date = datetime.datetime.fromtimestamp(float(data['datetime']))
                         
-                        
                         updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
                         
                         date = updated_date
@@ -145,7 +165,7 @@ def get_fire_data():
                         
                     # From experience, occasionally have missing latitude/longitude
                     except KeyError, e:
-                        log.error("Missing key %s so skipping" % e)
+                        log.error("Missing key %s in fire data so skipping :: %s" % (e, data['incident_number']))
         
         else:
             log.error("Non-200 code on get_fire_data: %s" % str(response.code))
@@ -237,7 +257,7 @@ def get_land_use_data():
                         
                     # From experience, occasionally have missing latitude/longitude
                     except KeyError, e:
-                        log.error("Missing key %s so skipping" % e)
+                        log.error("Missing key %s in land use data so skipping :: %s" % (e, data['application_permit_number']))
         
         else:
             log.error("Non-200 code on get_land_use_data: %s" % str(response.code))
@@ -322,10 +342,113 @@ def get_building_permits_data():
                                                             
                     # From experience, occasionally have missing latitude/longitude
                     except KeyError, e:
-                        log.error("Missing key %s so skipping" % e)
+                        log.error("Missing key %s in building permit data so skipping :: %s" % (e, data['application_permit_number']))
                         
         else:
             log.error("Non-200 code on get_building_permits_data: %s" % str(response.code))
     except urllib2.HTTPError, e:
         log.error("Error getting building permit data: %s" % e.getcode())
+
+
+def get_violations_data():
+    # Loads data of City of Seattle code violation cases
+    # 
+    # JSON response should be of form:
+    # {
+    # "last_inspection_date" : "2013-05-09T00:00:00",
+    #  "case_number" : "1029591",
+    #  "status" : "OPEN",
+    #  "location" : {
+    #    "needs_recoding" : false,
+    #    "longitude" : "-122.242624",
+    #    "latitude" : "47.510702"
+    #  },
+    #  "date_case_created" : "2013-05-10T00:00:00",
+    #  "case_group" : "ZONING",
+    #  "last_inspection_result" : "FAILED",
+    #  "address" : "7224 S TAFT ST",
+    #  "description" : "The new driveway fence gate/door is over height.",
+    #  "longitude" : "-122.242624",
+    #  "case_type" : "CITATION",
+    #  "latitude" : "47.510702",
+    #  "permit_and_complaint_status_url" : {
+    #    "url" : "http://web1.seattle.gov/dpd/PermitStatus/Project.aspx?id=1029591"
+    #  }
+    # }
+    
+    base_url = "http://data.seattle.gov/resource/dk8m-pdjf.json"
+    
+    if Violation.objects.count() == 0:
+        timestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
+    else:
+        latest = Violation.objects.latest('date_case_created')
+        tz = pytz.timezone('US/Pacific')
+        timestamp = latest.date_case_created.astimezone(tz).strftime("%F %H:%M:%S")
+    
+    query = "$where=date_case_created > '%s'" % timestamp
+    url = base_url + "?" + query.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
+    
+    try:
+        response = urllib2.urlopen(url)
+        
+        if response.code == 200:
+            all_data = json.load(response)
+            
+            tz = pytz.timezone("US/Pacific")
+            for data in all_data:
+                if 'case_number' in data: # Test that it's a valid record before processing
+                    try:
+                        point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
+                        
+                        # Date case created
+                        initial_date = datetime.datetime.strptime(data['date_case_created'], "%Y-%m-%dT%H:%M:%S")
+                        updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
+                        date = updated_date
+                        
+                        # Date last inspection. Not included with every violation
+                        if 'last_inspection_date' in data:
+                            initial_date = datetime.datetime.strptime(data['last_inspection_date'], "%Y-%m-%dT%H:%M:%S")
+                            updated_date = tz.localize(initial_date)
+                            last_inspection_date = updated_date
+                            inspection_result = data['last_inspection_result']
+                        else:
+                            last_inspection_date = None
+                            inspection_result = ''
+                        
+                        
+                        if 'case_group' in data: # For some reason, some records don't get a case_group
+                            case_group = data['case_group']
+                            
+                            if data['case_group'] in VIOLATION_MAPPING:
+                                category = VIOLATION_MAPPING[data['case_group']]
+                            else:
+                                category = 'Other'
+                        else:
+                            case_group = 'Other'
+                            category = 'Other'
+                        
+                        # Use get_or_create so that we never risk creating the same incident twice
+                        violation_obj, created = Violation.objects.get_or_create(
+                                                            case_number=data['case_number'],
+                                                            defaults={
+                                                                'case_type':data['case_type'],
+                                                                'address':data['address'],
+                                                                'description':data['description'],
+                                                                'case_group':case_group,
+                                                                'category':category,
+                                                                'date_case_created':date,
+                                                                'date_last_inspection':last_inspection_date,
+                                                                'last_inspection_result':inspection_result,
+                                                                'status':data['status'],
+                                                                'url':data['permit_and_complaint_status_url']['url'],
+                                                                'point':point
+                                                            })
+                        
+                    except KeyError, e:
+                        log.error("Missing key %s in violation data so skipping :: %s" % (e, data['case_number']))
+                    
+        else:
+            log.error("Non-200 code on get_violation_data: %s" % str(response.code))
+    except urllib2.HTTPError, e:
+        log.error("Error getting code violation data: %s" % e.getcode())
 

@@ -66,3 +66,26 @@ class BuildingPermit(models.Model):
     class Meta:
         ordering = ['-application_date', 'permit_type']
     
+
+class Violation(models.Model):
+    case_number = models.IntegerField()
+    case_type = models.CharField(max_length=40)
+    address = models.CharField(max_length=100)
+    description = models.TextField()
+    case_group = models.CharField(max_length=40)
+    category = models.CharField(max_length=40) # The derived category based on case_group
+    date_case_created = models.DateTimeField()
+    date_last_inspection = models.DateTimeField(null=True, blank=True)
+    last_inspection_result = models.CharField(max_length=10, null=True, blank=True)
+    status = models.CharField(max_length=32)
+    url = models.URLField()
+    
+    point = models.PointField(help_text="Represented as 'POINT(longitude, latitude)'")
+    objects = models.GeoManager()
+    
+    def __unicode__(self):
+        return self.category + " :: " + str(self.case_number) + " :: "  + str(self.date_case_created)
+    
+    class Meta:
+        ordering = ['-case_number']
+    

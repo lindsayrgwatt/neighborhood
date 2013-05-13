@@ -109,7 +109,7 @@ djcelery.setup_loader()
 
 CELERY_IMPORTS = ("data.tasks", )
 CELERY_DISABLE_RATE_LIMITS = True
-CELERYBEAT_SCHEDULE = {
+CELERYBEAT_SCHEDULE = { # The 1 minute crontab is for local testing to make sure queue working
     'get-fire-data': {
         'task': 'tasks.get_fire',
         #'schedule': crontab(minute="*/1"),
@@ -123,6 +123,11 @@ CELERYBEAT_SCHEDULE = {
     'get-building-permit-data': {
         'task': 'tasks.get_building_permits',
         #'schedule': crontab(minute='*/1'),
-        'schedule': crontab(minute='0', hour='*/6'),
-    }
+        'schedule': crontab(minute='0', hour='*/12'),
+    },
+    'get-violations-data': {
+        'task': 'tasks.get_violations',
+        #'schedule': crontab(minute='*/1'),
+        'schedule': crontab(minute='0', hour='*/12'),
+    },
 }
