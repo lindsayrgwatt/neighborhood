@@ -7,7 +7,7 @@ import logging
 
 from django.contrib.gis.geos import fromstr
 
-from data.models import Fire, LandPermit, BuildingPermit, Violation, FoodViolation
+from data.models import Fire, LandPermit, BuildingPermit, Violation, FoodViolation, Police
 
 log = logging.getLogger(__name__)
 
@@ -454,7 +454,7 @@ def get_violations_data():
 
 
 def get_food_violations_data():
-    # Loads data of King Count food establishment inspection cases
+    # Loads data of King County food establishment inspection cases
     # 
     # JSON response should be of form:
     # {
@@ -540,4 +540,176 @@ def get_food_violations_data():
             log.error("Non-200 code on get_food_violations_data: %s" % str(response.code))
     except urllib2.HTTPError, e:
         log.error("Error getting food violation data: %s" % e.getcode())
+
+
+def get_police_data():
+    # Loads data of Seattle 911 police incidents and incident reports
+    # 
+    # Two separate calls, one for 911 and one for reports
+    #
+    # JSON response for 911 should be of form:
+    # {
+    # "event_clearance_code" : "246",
+    #  "cad_event_number" : "13000151256",
+    #  "event_clearance_subgroup" : "NOISE DISTURBANCE",
+    #  "event_clearance_group" : "DISTURBANCES",
+    #  "cad_cdw_id" : "1393656",
+    #  "event_clearance_date" : "2013-05-06T00:03:00",
+    #  "zone_beat" : "N2",
+    #  "district_sector" : "N",
+    #  "incident_location" : {
+    #    "needs_recoding" : false,
+    #    "longitude" : "-122.355367628",
+    #    "latitude" : "47.696933157"
+    #  },
+    #  "hundred_block_location" : "92XX BLOCK OF GREENWOOD AV N",
+    #  "general_offense_number" : "2013151256",
+    #  "event_clearance_description" : "NOISE DISTURBANCE, RESIDENTIAL",
+    #  "longitude" : "-122.355367628",
+    #  "latitude" : "47.696933157",
+    #  "census_tract" : "1700.7010"
+    # }
+    #
+    # JSON response for incident reports should be of form:
+    # {
+    #  "offense_code" : "2202",
+    #  "offense_type" : "BURGLARY-FORCE-RES",
+    #  "census_tract_2000" : "9701.1012",
+    #  "date_reported" : "2013-05-06T00:00:00",
+    #  "location" : {
+    #    "needs_recoding" : false,
+    #    "longitude" : "-122.409463566",
+    #    "latitude" : "47.574985644"
+    #  },
+    #  "occurred_date_range_end" : "2013-05-05T22:23:00",
+    #  "zone_beat" : "W1",
+    #  "offense_code_extension" : "0",
+    #  "district_sector" : "W",
+    #  "hundred_block_location" : "32XX BLOCK OF 60 AV SW",
+    #  "summarized_offense_description" : "BURGLARY",
+    #  "general_offense_number" : "2013151244",
+    #  "longitude" : "-122.409463566",
+    #  "summary_offense_code" : "2200",
+    #  "latitude" : "47.574985644",
+    #  "rms_cdw_id" : "753475",
+    #  "occurred_date_or_date_range_start" : "2013-05-05T22:18:00"
+    #}
+    
+    base_url_911 = "http://data.seattle.gov/resource/3k2p-39jp.json"
+    base_url_incident = "http://data.seattle.gov/resource/7ais-f98f.json"
+    
+    tz = pytz.timezone('US/Pacific')
+    
+    if Police.objects.count() == 0:
+        timestamp_911 = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
+        timestamp_incident = timestamp_911
+    else:
+        latest_911 = Police.objects.exclude(event_clearance_date__isnull=True).order_by('-event_clearance_date')[0]
+        timestamp_911 = latest_911.event_clearance_date.astimezone(tz).strftime("%F %H:%M:%S")
+        
+        latest_incident = Police.objects.exclude(date_reported__isnull=True).order_by('-date_reported')[0]
+        timestamp_incident = latest_incident.date_reported.astimezone(tz).strftime("%F %H:%M:%S")
+        
+    query_911 = "$where=event_clearance_date > '%s'" % timestamp_911
+    url_911 = base_url_911 + "?" + query_911.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
+    
+    query_incident = "$where=date_reported > '%s'" % timestamp_incident
+    url_incident = base_url_incident + "?" + query_incident.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
+    
+    # 911
+    try:
+        response = urllib2.urlopen(url_911)
+        
+        if response.code == 200:
+            all_data = json.load(response)
+            
+            for data in all_data:
+                if 'event_clearance_date' in data: # Ignore records with no descriptions (Are these hang-ups?)
+                    try:
+                        point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
+                        
+                        # Date case created
+                        initial_date = datetime.datetime.strptime(data['event_clearance_date'], "%Y-%m-%dT%H:%M:%S")
+                        updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
+                        date = updated_date
+                        
+                        # Use get_or_create so that we never risk creating the same incident twice
+                        police_obj, created = Police.objects.get_or_create(
+                                                    general_offense_number=data['general_offense_number'],
+                                                    defaults={
+                                                        'hundred_block_location':data['hundred_block_location'],
+                                                        'point':point
+                                                    })
+                        
+                        # Update and save all attributes
+                        police_obj.cad_cdw_id = data['cad_cdw_id']
+                        police_obj.cad_event_number = data['cad_event_number']
+                        police_obj.event_clearance_code = data['event_clearance_code']
+                        police_obj.event_clearance_description = data['event_clearance_description']
+                        police_obj.event_clearance_group = data['event_clearance_group']
+                        police_obj.event_clearance_date = date
+                        
+                        if 'district_sector' in data:
+                            police_obj.district_sector = data['district_sector'][0:1]
+                        if 'zone_beat' in data:
+                            police_obj.zone_beat = data['zone_beat'][0:2]
+                        if 'census_tract' in data:
+                            police_obj.census_tract = data['census_tract']
+                        
+                        police_obj.save()
+                    except KeyError, e:
+                        log.error("Missing key %s in police 911 data so skipping :: %s" % (e, data['general_offense_number']))
+        else:
+            log.error("Non-200 code on get_police_data, 911 info: %s" % str(response.code))
+    except urllib2.HTTPError, e:
+        log.error("Error getting police data, 911 info: %s" % e.getcode())
+    
+    # Police Incidents
+    try:
+        response = urllib2.urlopen(url_incident)
+        
+        if response.code == 200:
+            all_data = json.load(response)
+            
+            for data in all_data:
+                if 'offense_type' in data: # Check valid record
+                    try:
+                        point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
+                        
+                        # Date case created
+                        initial_date = datetime.datetime.strptime(data['date_reported'], "%Y-%m-%dT%H:%M:%S")
+                        updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
+                        date = updated_date
+                        
+                        # Use get_or_create so that we never risk creating the same incident twice
+                        police_obj, created = Police.objects.get_or_create(
+                                                    general_offense_number=data['general_offense_number'],
+                                                    defaults={
+                                                        'hundred_block_location':data['hundred_block_location'],
+                                                        'point':point
+                                                    })
+                        
+                        # Update and save all attributes
+                        police_obj.rms_cdw_id = data['rms_cdw_id']
+                        police_obj.offense_code = data['offense_code']
+                        police_obj.offense_code_extension = data['offense_code_extension']
+                        police_obj.offense_type = data['offense_type']
+                        police_obj.summary_offense_code = data['summary_offense_code']
+                        police_obj.summarized_offense = data['summarized_offense_description']
+                        police_obj.date_reported = date
+                        
+                        if 'district_sector' in data:
+                            police_obj.district_sector = data['district_sector'][0:1]
+                        if 'zone_beat' in data:
+                            police_obj.zone_beat = data['zone_beat'][0:2]
+                        if 'census_tract_2000' in data:
+                            police_obj.census_tract = data['census_tract_2000']
+                        
+                        police_obj.save()
+                    except KeyError, e:
+                        log.error("Missing key %s in police incident data so skipping :: %s" % (e, data['general_offense_number']))
+        else:
+            log.error("Non-200 code on get_police_data, incident info: %s" % str(response.code))
+    except urllib2.HTTPError, e:
+        log.error("Error getting police data, incident info: %s" % e.getcode())
 

@@ -1,5 +1,5 @@
 from celery import task
-from data.load import get_fire_data, get_land_use_data, get_building_permits_data, get_violations_data, get_food_violations_data
+from data.load import get_fire_data, get_land_use_data, get_building_permits_data, get_violations_data, get_food_violations_data, get_police_data
 
 @task(name="tasks.get_fire", ignore_result=True)
 def fire_data():
@@ -22,3 +22,7 @@ def violations_data():
 @task(name='tasks.get_food_violations', ignore_results=True)
 def food_violations_data():
     return get_food_violations_data()
+
+@task(name='tasks.get_police', ignore_results=True)
+def police_data():
+    return get_police_data()
