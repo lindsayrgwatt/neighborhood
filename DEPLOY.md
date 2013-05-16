@@ -57,6 +57,22 @@ If you've never used South before, here's what you need to know:
   * If you run `fab migrate_local` you can invoke all the local migrations
 * South intercepts `syncdb` to make sure that any apps using South (i.e., have the folder `migrations`) aren't updated by the `sycndb` process
 
+## 4.
+
+Make sure to run the `data.load.py` scripts that set up aggregate objects or you're going to get all kinds of errors:
+* `create_fire_incident_objects()`
+* `create_permit_ranges()`
+* `create_violation_aggregates()`
+* `create_police_detail_objects()`
+
+## 5.
+
+You'll need to update the files in `neighborhood/data/historical/` if you want to load historical data. You can download each CSV from the appropriate URL (see `load.py` for the URLs; you can limit them to the appropriate date range).
+
+Note that when running locally you should set `DEBUG` to `False` to reduce memory and speed things. And when running in prod I found that I had to run each script individually; the thread would randomly halt otherwise.
+
+I strongly recommend that you load the historical data locally, export them via `psql` and then load those files on the server.
+
 ## localhost Gotchas
 
 ### 1.
@@ -152,4 +168,4 @@ Scale to 128MB by typing this command:
 dotcloud scale workers:memory=128M
 ```
 
-You'll also likely have to scale the `www` (Python) process to 128M as well.
+You'll also likely have to scale the `www` (Python) process to 256MB as well.

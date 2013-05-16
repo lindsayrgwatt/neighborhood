@@ -1,6 +1,7 @@
 import operator
 import csv
 
+# UPDATE WITH CORRECT PATH
 violations = open("/Users/lindsayrgwatt/Desktop/Code_Violation_Cases.csv")
 
 case_type = {}

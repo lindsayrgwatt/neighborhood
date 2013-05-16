@@ -1,6 +1,7 @@
 import operator
 import csv
 
+# UPDATE THESE WITH CORRECT PATH
 calls = open("/Users/lindsayrgwatt/Desktop/Seattle_Police_Department_911_Incident_Response.csv")
 incidents = open("/Users/lindsayrgwatt/Desktop/Seattle_Police_Department_Police_Report_Incident.csv")
 

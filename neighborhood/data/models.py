@@ -4,129 +4,112 @@ from django.contrib.gis.db import models
 
 log = logging.getLogger(__name__)
 
-CRIME_MAPPING = {
-    'ACCIDENT INVESTIGATION':'Traffic',
-    'ANIMAL COMPLAINT':'Other',
-    'ANIMAL COMPLAINTS':'Other',
-    'ARREST':'Arrest',
-    'ASSAULT':'Assault, Threats and Weapons',
-    'ASSAULTS':'Assault, Threats and Weapons',
-    'AUTO THEFTS':'Theft or Similar',
-    'BIAS INCIDENT':'Other',
-    'BIKE':'Other',
-    'BIKE THEFT':'Theft or Similar',
-    'BURGLARY':'Theft or Similar',
-    'BURGLARY-SECURE PARKING-RES':'Theft or Similar',
-    'Bike Theft':'Theft or Similar',
-    'CAR PROWL':'Mischief and Suspicious People',
-    'COUNTERFEIT':'Theft or Similar',
-    'Car Prowl':'Mischief and Suspicious People',
-    'DISORDERLY CONDUCT':'Disturbances',
-    'DISPUTE':'Disturbances',
-    'DISTURBANCE':'Disturbances',
-    'DISTURBANCES':'Disturbances',
-    'DRIVE BY (NO INJURY)':'Disturbances',
-    'DUI':'Drugs and Liquor',
-    'ELUDING':'Arrest',
-    'EMBEZZLE':'Theft or Similar',
-    'ESCAPE':'Other',
-    'EXTORTION':'Theft or Similar',
-    'FAILURE TO REGISTER (SEX OFFENDER)':'Other',
-    'FALSE ALARMS':'False Alarm',
-    'FALSE REPORT':'False Alarm',
-    'FIREWORK':'Disturbances',
-    'FORGERY':'Theft or Similar',
-    'FRAUD':'Theft or Similar',
-    'FRAUD AND FINANCIAL':'Theft or Similar',
-    'FRAUD CALLS':'Theft or Similar',
-    'GAMBLE':'Prostitution, Vice and Gambling',
-    'HARBOR CALLS':'Other',
-    'HAZARDS':'Other',
-    'HOMICIDE':'Homicide',
-    'ILLEGAL DUMPING':'Disturbances',
-    'INJURY':'Other',
-    'LEWD CONDUCT':'Disturbances',
-    'LIQUOR VIOLATION':'Drugs and Liquor',
-    'LIQUOR VIOLATIONS':'Drugs and Liquor',
-    'LOITERING':'Mischief and Suspicious People',
-    'LOST PROPERTY':'Other',
-    'MAIL THEFT':'Theft or Similar',
-    'MENTAL HEALTH':'Other',
-    'MISCELLANEOUS MISDEMEANORS':'Other',
-    'NARCOTICS':'Drugs and Liquor',
-    'NARCOTICS COMPLAINTS':'Drugs and Liquor',
-    'NUISANCE, MISCHIEF':'Mischief and Suspicious People',
-    'NUISANCE, MISCHIEF':'Mischief and Suspicious People',
-    'OBSTRUCT':'Other',
-    'OTHER PROPERTY':'Theft or Similar',
-    'OTHER VICE':'Prostitution, Vice and Gambling',
-    'Other Property':'Theft or Similar',
-    'PERSON DOWN/INJURY':'Other',
-    'PERSONS - LOST, FOUND, MISSING':'Other',
-    'PICKPOCKET':'Theft or Similar',
-    'PORNOGRAPHY':'Prostitution, Vice and Gambling',
-    'PROPERTY - MISSING, FOUND':'Other',
-    'PROPERTY DAMAGE':'Disturbances',
-    'PROSTITUTION':'Prostitution, Vice and Gambling',
-    'PROWLER':'Mischief and Suspicious People',
-    'PUBLIC NUISANCE':'Mischief and Suspicious People',
-    'PURSE SNATCH':'Theft or Similar',
-    'Pickpocket':'Theft or Similar',
-    'Purse Snatch':'Theft or Similar',
-    'RECKLESS BURNING':'Disturbances',
-    'RECOVERED PROPERTY':'Other',
-    'ROBBERY':'Theft or Similar',
-    'SHOPLIFTING':'Theft or Similar',
-    'STAY OUT OF AREA OF DRUGS':'Drugs and Liquor',
-    'STAY OUT OF AREA OF PROSTITUTION':'Prostitution, Vice and Gambling',
-    'STOLEN PROPERTY':'Theft or Similar',
-    'SUSPICIOUS CIRCUMSTANCES':'Mischief and Suspicious People',
-    'Shoplifting':'Theft or Similar',
-    'THEFT OF SERVICES':'Theft or Similar',
-    'THREATS':'Assault, Threats and Weapons',
-    'THREATS, HARASSMENT':'Assault, Threats and Weapons',
-    'TRAFFIC':'Traffic',
-    'TRAFFIC RELATED CALLS':'Traffic',
-    'TRESPASS':'Disturbances',
-    'VEHICLE THEFT':'Theft or Similar',
-    'VICE CALLS':'Prostitution, Vice and Gambling',
-    'VIOLATION OF COURT ORDER':'Arrest',
-    'WARRANT ARREST':'Arrest',
-    'WEAPON':'Assault, Threats and Weapons',
-    'WEAPONS CALLS':'Assault, Threats and Weapons',
-    '[INC - CASE DC USE ONLY]':'Other',
-}
+##############################################
+# 
+# Fire Info
+#
+class FireIncidentAggregateType(models.Model):
+    description = models.CharField(max_length=40, unique=True)
+    
+    def __unicode__(self):
+        return self.description
+
+
+class FireIncidentType(models.Model):
+    description = models.CharField(max_length=40, unique=True) # Free text field from standard codes
+    aggregate = models.ForeignKey('FireIncidentAggregateType')
+    
+    def __unicode__(self):
+        return self.description
+    
+    class Meta:
+        ordering = ['description']
+    
+    def save(self, *args, **kwargs):
+        if not hasattr(self, 'aggregate'):
+            self.aggregate = FireIncidentAggregateType.objects.get(description='Other')
+            log.info("New type of fire category: %s" % self.description)
+        
+        super(FireIncidentType, self).save(*args, **kwargs)
+    
+
 
 class Fire(models.Model):
     address = models.CharField(max_length=100)
-    incident_number = models.CharField(max_length=10)
-    incident_type = models.CharField(max_length=50) # Free text field from standard codes
-    aggregate_incident_type = models.CharField(max_length=50)
-    date = models.DateTimeField()
+    incident_number = models.CharField(max_length=10, db_index=True)
+    incident_category = models.ForeignKey('FireIncidentType', null=True)
+    incident_aggregate_category = models.ForeignKey('FireIncidentAggregateType', null=True, editable=False)
+    date = models.DateTimeField(db_index=True)
     
     point = models.PointField(help_text="Represented as 'POINT(longitude, latitude)'")
     objects = models.GeoManager()
     
     def __unicode__(self):
-        return self.incident_type + " :: " + str(self.date)
+        return self.incident_number + " :: " + self.incident_category.description + " :: " + str(self.date)
     
     class Meta:
-        ordering = ['-date', 'incident_type']
+        ordering = ['-date', 'incident_category']
+    
+    def save(self, *args, **kwargs):
+        self.incident_aggregate_category = self.incident_category.aggregate
+        
+        super(Fire, self).save(*args, **kwargs)
+    
+
+
+##############################################
+# 
+# Land/Building Info
+#
+def calc_permit_value(permit):
+    ranges = PermitValue.objects.all()
+    
+    range_mapping = {}
+    for item in ranges:
+        range_mapping[item.value] = item
+    
+    values = [item.value for item in ranges]
+    values.sort()
+    
+    counter = 0
+    
+    for value in values:
+        if permit.value < value:
+            break
+        counter += 1
+    
+    if counter < len(values):
+        permit.value_range=range_mapping[values[counter]]
+    else:
+        permit.value_range=range_mapping[values[len(values)-1]]
+    
+    return permit
+
+class PermitValue(models.Model):
+    value = models.IntegerField(unique=True)
+    label = models.CharField(max_length=20)
+    
+    def __unicode__(self):
+        return self.label
+    
+    class Meta:
+        ordering = ['-value']
     
 
 
 class LandPermit(models.Model):
-    permit_type = models.CharField(max_length=30)
+    permit_type = models.CharField(max_length=40, db_index=True)
     status = models.CharField(max_length=50)
-    application_date = models.DateTimeField()
+    application_date = models.DateTimeField(db_index=True)
     applicant_name = models.CharField(max_length=100)
-    permit_number = models.IntegerField()
+    permit_number = models.IntegerField(db_index=True)
     edg_required = models.BooleanField()
-    category = models.CharField(max_length=30)
+    category = models.CharField(max_length=30, db_index=True)
     appealed = models.BooleanField()
     address = models.CharField(max_length=100)
     description = models.TextField()
-    value = models.IntegerField()
+    value = models.IntegerField(db_index=True)
+    value_range = models.ForeignKey('PermitValue', db_index=True, null=True, blank=True)
     decision_type = models.CharField(max_length=1)
     url = models.URLField()
     
@@ -136,9 +119,15 @@ class LandPermit(models.Model):
     def __unicode__(self):
         return self.permit_type + " :: " + str(self.permit_number) + " :: " + str(self.application_date)
         
+    def save(self, *args, **kwargs):
+        self = calc_permit_value(self)
+        
+        super(LandPermit, self).save(*args, **kwargs)
+    
     class Meta:
         ordering = ['-application_date', 'permit_type']
     
+
 
 class BuildingPermit(models.Model):
     permit_type = models.CharField(max_length=30)
@@ -146,12 +135,13 @@ class BuildingPermit(models.Model):
     application_date = models.DateTimeField()
     work_type = models.CharField(max_length=30)
     applicant_name = models.CharField(max_length=100)
-    permit_number = models.IntegerField()
-    category = models.CharField(max_length=30)
-    action_type = models.CharField(max_length=10)
+    permit_number = models.IntegerField(db_index=True)
+    category = models.CharField(max_length=30, db_index=True)
+    action_type = models.CharField(max_length=50)
     address = models.CharField(max_length=100)
     description = models.TextField()
-    value = models.IntegerField()
+    value = models.IntegerField(db_index=True)
+    value_range = models.ForeignKey('PermitValue', db_index=True, null=True)
     url = models.URLField()
     
     point = models.PointField(help_text="Represented as 'POINT(longitude, latitude)'")
@@ -159,19 +149,53 @@ class BuildingPermit(models.Model):
     
     def __unicode__(self):
         return self.permit_type + " :: " + str(self.permit_number) + " :: "  + str(self.application_date)
+    
+    def save(self, *args, **kwargs):
+        self = calc_permit_value(self)
         
+        super(BuildingPermit, self).save(*args, **kwargs)
+    
+    
     class Meta:
         ordering = ['-application_date', 'permit_type']
     
 
+
+##############################################
+# 
+# Violation Info
+#
+class ViolationAggregateCategory(models.Model):
+    category = models.CharField(max_length=40, unique=True)
+    
+    def __unicode__(self):
+        return self.category
+    
+    class Meta:
+        ordering = ['category']
+    
+
+class ViolationCategory(models.Model):
+    category = models.CharField(max_length=40, unique=True)
+    aggregate = models.ForeignKey('ViolationAggregateCategory')
+    
+    def __unicode__(self):
+        return self.category + " :: " + self.aggregate.category
+    
+    class Meta:
+        ordering = ['category']
+    
+
 class Violation(models.Model):
-    case_number = models.IntegerField()
+    case_number = models.IntegerField(db_index=True)
     case_type = models.CharField(max_length=40)
     address = models.CharField(max_length=100)
     description = models.TextField()
-    case_group = models.CharField(max_length=40)
-    category = models.CharField(max_length=40) # The derived category based on case_group
-    date_case_created = models.DateTimeField()
+    #case_group = models.CharField(max_length=40)
+    group = models.ForeignKey('ViolationCategory', db_index=True, null=True)
+    #category = models.CharField(max_length=40, db_index=True) # The derived category based on case_group
+    aggregate = models.ForeignKey('ViolationAggregateCategory', db_index=True, null=True)
+    date_case_created = models.DateTimeField(db_index=True)
     date_last_inspection = models.DateTimeField(null=True, blank=True)
     last_inspection_result = models.CharField(max_length=10, null=True, blank=True)
     status = models.CharField(max_length=32)
@@ -181,21 +205,24 @@ class Violation(models.Model):
     objects = models.GeoManager()
     
     def __unicode__(self):
-        return self.category + " :: " + str(self.case_number) + " :: "  + str(self.date_case_created)
+        return self.group.category + " :: " + str(self.case_number) + " :: "  + str(self.date_case_created)
     
     class Meta:
         ordering = ['-case_number']
     
 
+
 class FoodViolation(models.Model):
     name = models.CharField(max_length=100)
     program_identifier = models.CharField(max_length=100)
-    inspection_date = models.DateTimeField()
+    inspection_date = models.DateTimeField(db_index=True)
     place_description = models.CharField(max_length=50)
     address = models.CharField(max_length=100)
     business_name = models.CharField(max_length=100)
     inspection_type = models.CharField(max_length=50)
-    violation_type = models.CharField(max_length=10)
+    violation_type = models.CharField(max_length=10, db_index=True)
+    group = models.ForeignKey('ViolationCategory', db_index=True, null=True)
+    aggregate = models.ForeignKey('ViolationAggregateCategory', db_index=True, null=True)
     violation_code = models.CharField(max_length=4)
     violation_description = models.CharField(max_length=250)
     inspection_serial_num = models.CharField(max_length=10)
@@ -207,8 +234,127 @@ class FoodViolation(models.Model):
     def __unicode__(self):
         return self.business_name + " :: " + str(self.inspection_date)
     
+    def save(self):
+        self.group = ViolationCategory.objects.get(category='FOOD INSPECTION')
+        self.aggregate = self.group.aggregate
+        
+        super(FoodViolation, self).save(*args, **kwargs)
+    
     class Meta:
         ordering = ['-inspection_date']
+
+
+##############################################
+# 
+# Police Info
+#
+class HundredBlockSection(models.Model):
+    block = models.CharField(max_length=80, unique=True)
+    
+    def __unicode__(self):
+        return self.block
+    
+
+
+class ZoneBeat(models.Model):
+    beat = models.CharField(max_length=5, unique=True)
+    
+    def __unicode__(self):
+        return self.beat
+    
+
+
+class DistrictSector(models.Model):
+    district = models.CharField(max_length=2, unique=True)
+    
+    def __unicode__(self):
+        return self.district
+    
+
+
+class CensusTract(models.Model):
+    tract = models.FloatField(unique=True)
+    
+    def __unicode__(self):
+        return str(self.tract)
+    
+
+
+class ClearanceCode(models.Model):
+    code = models.IntegerField(unique=True)
+    
+    def __unicode__(self):
+        return str(self.code)
+    
+
+
+class PoliceEventDetail(models.Model):
+    # Union of 911 Event Clearance Descriptions and Incident Reports' 
+    description = models.CharField(max_length=75, unique=True)
+    source_911 = models.BooleanField() # True if description came from 911 reports, not incident reports
+    
+    def __unicode__(self):
+        return self.description
+    
+    class Meta:
+        ordering = ['description']
+    
+
+
+class PoliceEventAggregateGroup(models.Model):
+    category = models.CharField(max_length=32, unique=True)
+    
+    def __unicode__(self):
+        return self.category
+    
+    class Meta:
+        ordering = ['category']
+    
+
+
+class PoliceEventGroup(models.Model):
+    # Union of 911 Event Clearance Group and Incident Reports' 
+    description = models.CharField(max_length=34, unique=True)
+    category = models.ForeignKey('PoliceEventAggregateGroup')
+    source_911 =models.BooleanField() # True if description came from 911 reports, not incident reports
+    
+    def save(self, *args, **kwargs):
+        if not hasattr(self, 'category'):
+            self.category = PoliceEventAggregateGroup.objects.get(category='Other')
+            log.info("New type of police event aggregate category: %s" % self.description)
+        
+        super(PoliceEventGroup, self).save(*args, **kwargs)
+    
+    
+    def __unicode__(self):
+        return self.description + " :: " + self.category.category
+    
+    class Meta:
+        ordering = ['description']
+
+
+class PoliceOffenseCode(models.Model):
+    code = models.CharField(max_length=4, unique=True) # Some have value 'X' but most are integers
+    
+    def __unicode__(self):
+        return self.code
+    
+
+
+class PoliceOffenseCodeExtension(models.Model):
+    code = models.IntegerField(unique=True)
+    
+    def __unicode__(self):
+        return str(self.code)
+    
+
+
+class PoliceSummaryOffenseCode(models.Model):
+    code = models.CharField(max_length=5, unique=True)
+    
+    def __unicode__(self):
+        return self.code
+    
 
 
 class Police(models.Model):
@@ -223,71 +369,67 @@ class Police(models.Model):
     # 
     # Model uses computed fields on save() to reconcile everything
     
-    general_offense_number = models.IntegerField() # Join across both 911 and incident repsonse
+    general_offense_number = models.BigIntegerField(unique=True) # Join across both 911 and incident repsonse
     
     # Only for 911
     cad_cdw_id = models.IntegerField(blank=True, null=True)
     cad_event_number = models.BigIntegerField(blank=True, null=True)
-    event_clearance_code = models.IntegerField(blank=True, null=True)
-    event_clearance_description = models.CharField(blank=True, null=True, max_length=100) # Best 911 description
-    event_clearance_group = models.CharField(blank=True, null=True, max_length=32) # Aggregated 911 description
-    event_clearance_date = models.DateTimeField(blank=True, null=True)
+    clearance_code = models.ForeignKey('ClearanceCode', blank=True, null=True)
+    clearance_description = models.ForeignKey('PoliceEventDetail', blank=True, null=True, related_name='description_911') # Best 911 description
+    clearance_group = models.ForeignKey('PoliceEventGroup', blank=True, null=True, related_name='group_911') # Roll up of 911 descriptions
+    event_clearance_date = models.DateTimeField(blank=True, null=True, db_index=True)
     
     # Only for incident reports
     rms_cdw_id = models.IntegerField(blank=True, null=True)
-    offense_code = models.CharField(blank=True, null=True, max_length=5) # Some have value 'X' but most are integers
-    offense_code_extension = models.IntegerField(blank=True, null=True)
-    offense_type = models.CharField(blank=True, null=True, max_length=100) # Best incident report description
-    summary_offense_code = models.CharField(blank=True, null=True, max_length=5) 
-    summarized_offense = models.CharField(blank=True, null=True, max_length=32) # Aggregated incident report description
-    date_reported = models.DateTimeField(blank=True, null=True)
+    code = models.ForeignKey('PoliceOffenseCode', blank=True, null=True)
+    code_extension = models.ForeignKey('PoliceOffenseCodeExtension', blank=True, null=True)
+    offense_detail = models.ForeignKey('PoliceEventDetail', blank=True, null=True, related_name='description_incident') # Best incident report description
+    offense_code_summary = models.ForeignKey('PoliceSummaryOffenseCode', blank=True, null=True)
+    offense_summary = models.ForeignKey('PoliceEventGroup', blank=True, null=True, related_name='group_incident') #Roll up of incident report descriptions
+    date_reported = models.DateTimeField(blank=True, null=True, db_index=True)
     
     # Common to both 911 and incident reports
     # Blanks and nulls are allowed based on experience with data; sometimes it's just missing
-    hundred_block_location = models.CharField(max_length=50)
-    district_sector = models.CharField(max_length=1, blank=True, null=True)
-    zone_beat = models.CharField(max_length=2, blank=True, null=True)
-    census_tract = models.FloatField(blank=True, null=True) 
+    hundred_block = models.ForeignKey('HundredBlockSection', null=True)
+    district = models.ForeignKey('DistrictSector', blank=True, null=True)
+    beat = models.ForeignKey('ZoneBeat', blank=True, null=True)
+    census = models.ForeignKey('CensusTract', blank=True, null=True)
     
     # Calculated values
     # Allow null values so that can use get_or_create effectively
-    event_detail = models.CharField(max_length=100, blank=True, null=True)
-    event_category = models.CharField(max_length=32, blank=True, null=True)
-    event_aggregate_category = models.CharField(max_length=32, blank=True, null=True)
-    effective_date = models.DateTimeField(blank=True, null=True)
+    detail = models.ForeignKey('PoliceEventDetail', blank=True, null=True, editable=False, db_index=True, related_name='description_overall')
+    category = models.ForeignKey('PoliceEventGroup', blank=True, null=True, editable=False, db_index=True, related_name='group_overall')
+    aggregate_category = models.ForeignKey('PoliceEventAggregateGroup', blank=True, null=True, editable=False, db_index=True)
+    effective_date = models.DateTimeField(blank=True, null=True, db_index=True)
     
     point = models.PointField(help_text="Represented as 'POINT(longitude, latitude)'")
     objects = models.GeoManager()
     
     def save(self, *args, **kwargs):
         # For descriptions, police incident reports trump 911
-        if self.offense_type:
-            self.event_detail = self.offense_type
-        elif self.event_clearance_description:
-            self.event_detail = self.event_clearance_description
+        if self.clearance_description:
+            self.detail = self.clearance_description
+        if self.offense_detail:
+            self.detail = self.offense_detail
         
-        if self.summarized_offense:
-            self.event_category = self.summarized_offense
-        elif self.event_clearance_group:
-            self.event_category = self.event_clearance_group
+        if self.clearance_group:
+            self.category = self.clearance_group
+        elif self.offense_summary:
+            self.category = self.offense_summary
+        
+        if self.category:
+            self.aggregate_category = self.category.category
         
         # For reporting times, 911 trumps police incident reports
         if self.event_clearance_date:
             self.effective_date = self.event_clearance_date
-        elif self.date_reported:
-            self.effective_date = self.event_clearance_date
-        
-        if self.event_category in CRIME_MAPPING:
-            self.event_aggregate_category = CRIME_MAPPING[self.event_category]
-        else:
-            self.event_aggregate_category = 'Other'
-            if self.event_category != '' and self.event_category != ' ' and self.event_category != None:
-                log.error("New type of crime category: %s" % self.event_category)
+        if self.date_reported:
+            self.effective_date = self.date_reported
         
         super(Police, self).save(*args, **kwargs)
         
     def __unicode__(self):
-        return str(self.general_offense_number) + " :: " + self.event_aggregate_category + " :: "+ str(self.effective_date)
+        return str(self.general_offense_number) + " :: " + self.category.description + " :: "+ str(self.effective_date)
     
     class Meta:
         ordering = ['-general_offense_number', '-effective_date']

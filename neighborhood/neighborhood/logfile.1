@@ -1,39 +1,15 @@
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:27] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:28] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:28] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:28] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 21:54:29] ERROR [data.models:284] New type of crime category: None
-[13/May/2013 22:07:50] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "CREATE TABLE "data_foodviolation" ("id" serial NOT NULL PRIMARY KEY, "name" varchar(100) NOT NULL, "program_identifier" varchar(100) NOT NULL, "inspection_date" timestamp with time zone NOT NULL, "place_description" varchar(50) NOT NULL, "address" varchar(100) NOT NULL, "business_name" varchar(100) NOT NULL, "inspection_type" varchar(50) NOT NULL, "violation_type" varchar(10) NOT NULL, "violation_code" varchar(4) NOT NULL, "violation_description" varchar(250) NOT NULL, "inspection_serial_num" varchar(10) NOT NULL, "violation_record_num" varchar(10) NOT NULL);" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_foodviolation', 'point', 4326, 'POINT', 2);" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ALTER "point" SET NOT NULL;" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_point_id" ON "data_foodviolation" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "CREATE TABLE "data_police" ("id" serial NOT NULL PRIMARY KEY, "general_offense_number" integer NOT NULL, "cad_cdw_id" integer NULL, "cad_event_number" integer NULL, "event_clearance_code" integer NULL, "event_clearance_description" varchar(32) NULL, "event_clearance_group" varchar(32) NULL, "event_clearance_date" timestamp with time zone NULL, "rms_cdw_id" integer NULL, "offense_code" varchar(5) NULL, "offense_code_extension" integer NULL, "offense_type" varchar(32) NULL, "summary_offense" varchar(5) NULL, "summarized_offense" varchar(32) NULL, "date_reported" timestamp with time zone NULL, "hundred_block_location" varchar(50) NOT NULL, "district_sector" varchar(1) NOT NULL, "zone_beat" varchar(2) NOT NULL, "census_tract" double precision NOT NULL, "event_detail" varchar(32) NOT NULL, "event_category" varchar(32) NOT NULL, "event_aggregate_category" varchar(32) NOT NULL, "effective_date" timestamp with time zone NOT NULL);" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_police', 'point', 4326, 'POINT', 2);" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER "point" SET NOT NULL;" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "CREATE INDEX "data_police_point_id" ON "data_police" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "ALTER TABLE "data_police" DROP COLUMN "summary_offense" CASCADE;" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "ALTER TABLE "data_police" ADD COLUMN "summary_offense_code" varchar(5) NULL;" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "summary_offense_code" TYPE varchar(5), ALTER COLUMN "summary_offense_code" DROP NOT NULL, ALTER COLUMN "summary_offense_code" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -44,7 +20,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -55,7 +31,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -66,7 +42,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -77,8 +53,8 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "census_tract" TYPE double precision, ALTER COLUMN "census_tract" DROP NOT NULL, ALTER COLUMN "census_tract" DROP DEFAULT;" with params "[]"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "event_detail" TYPE varchar(32), ALTER COLUMN "event_detail" DROP NOT NULL, ALTER COLUMN "event_detail" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -89,7 +65,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -100,7 +76,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -111,7 +87,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -122,8 +98,8 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "zone_beat" TYPE varchar(2), ALTER COLUMN "zone_beat" DROP NOT NULL, ALTER COLUMN "zone_beat" DROP DEFAULT;" with params "[]"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "event_category" TYPE varchar(32), ALTER COLUMN "event_category" DROP NOT NULL, ALTER COLUMN "event_category" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:08] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -134,7 +110,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -145,7 +121,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -156,7 +132,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -167,119 +143,8 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 22:07:50] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "district_sector" TYPE varchar(1), ALTER COLUMN "district_sector" DROP NOT NULL, ALTER COLUMN "district_sector" DROP DEFAULT;" with params "[]"
-[13/May/2013 22:34:52] ERROR [django.request:215] Internal Server Error: /admin/data/police/
-Traceback (most recent call last):
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/django/core/handlers/base.py", line 101, in get_response
-    request.path_info)
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/django/core/urlresolvers.py", line 298, in resolve
-    for pattern in self.url_patterns:
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/django/core/urlresolvers.py", line 328, in url_patterns
-    patterns = getattr(self.urlconf_module, "urlpatterns", self.urlconf_module)
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/django/core/urlresolvers.py", line 323, in urlconf_module
-    self._urlconf_module = import_module(self.urlconf_name)
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/django/utils/importlib.py", line 35, in import_module
-    __import__(name)
-  File "/Users/lindsayrgwatt/apps/neighborhood_on_dotcloud/neighborhood/neighborhood/urls.py", line 4, in <module>
-    admin.autodiscover()
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/django/contrib/admin/__init__.py", line 29, in autodiscover
-    import_module('%s.admin' % app)
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/django/utils/importlib.py", line 35, in import_module
-    __import__(name)
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/djcelery/admin.py", line 270, in <module>
-    class PeriodicTaskAdmin(admin.ModelAdmin):
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/djcelery/admin.py", line 272, in PeriodicTaskAdmin
-    form = periodic_task_form()
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/djcelery/admin.py", line 242, in periodic_task_form
-    current_app.loader.import_default_modules()
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/djcelery/loaders.py", line 137, in import_default_modules
-    super(DjangoLoader, self).import_default_modules()
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/celery/loaders/base.py", line 123, in import_default_modules
-    tuple(maybe_list(self.app.conf.CELERY_INCLUDE))
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/celery/loaders/base.py", line 106, in import_task_module
-    return self.import_from_cwd(module)
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/celery/loaders/base.py", line 115, in import_from_cwd
-    package=package,
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/celery/utils/imports.py", line 96, in import_from_cwd
-    return imp(module, package=package)
-  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/celery/loaders/base.py", line 109, in import_module
-    return importlib.import_module(module, package=package)
-  File "/usr/local/Cellar/python/2.7.4/Frameworks/Python.framework/Versions/2.7/lib/python2.7/importlib/__init__.py", line 37, in import_module
-    __import__(name)
-  File "/Users/lindsayrgwatt/apps/neighborhood_on_dotcloud/neighborhood/data/tasks.py", line 2, in <module>
-    from data.load import get_fire_data, get_land_use_data, get_building_permits_data, get_violations_data, get_food_violations_data, get_police_data
-  File "/Users/lindsayrgwatt/apps/neighborhood_on_dotcloud/neighborhood/data/load.py", line 656
-    if 'census_tract' in:
-                        ^
-SyntaxError: invalid syntax
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE TABLE "celery_taskmeta" ("id" serial NOT NULL PRIMARY KEY, "task_id" varchar(255) NOT NULL UNIQUE, "status" varchar(50) NOT NULL, "result" text NULL, "date_done" timestamp with time zone NOT NULL, "traceback" text NULL);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE TABLE "celery_tasksetmeta" ("id" serial NOT NULL PRIMARY KEY, "taskset_id" varchar(255) NOT NULL UNIQUE, "result" text NOT NULL, "date_done" timestamp with time zone NOT NULL);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE TABLE "djcelery_intervalschedule" ("id" serial NOT NULL PRIMARY KEY, "every" integer NOT NULL, "period" varchar(24) NOT NULL);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE TABLE "djcelery_crontabschedule" ("id" serial NOT NULL PRIMARY KEY, "minute" varchar(64) NOT NULL, "hour" varchar(64) NOT NULL, "day_of_week" varchar(64) NOT NULL);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE TABLE "djcelery_periodictasks" ("ident" smallint NOT NULL PRIMARY KEY, "last_update" timestamp with time zone NOT NULL);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE TABLE "djcelery_periodictask" ("id" serial NOT NULL PRIMARY KEY, "name" varchar(200) NOT NULL UNIQUE, "task" varchar(200) NOT NULL, "interval_id" integer NULL, "crontab_id" integer NULL, "args" text NOT NULL, "kwargs" text NOT NULL, "queue" varchar(200) NULL, "exchange" varchar(200) NULL, "routing_key" varchar(200) NULL, "expires" timestamp with time zone NULL, "enabled" boolean NOT NULL, "last_run_at" timestamp with time zone NULL, "total_run_count" integer CHECK ("total_run_count" >= 0) NOT NULL, "date_changed" timestamp with time zone NOT NULL);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE TABLE "djcelery_workerstate" ("id" serial NOT NULL PRIMARY KEY, "hostname" varchar(255) NOT NULL UNIQUE, "last_heartbeat" timestamp with time zone NULL);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE TABLE "djcelery_taskstate" ("id" serial NOT NULL PRIMARY KEY, "state" varchar(64) NOT NULL, "task_id" varchar(36) NOT NULL UNIQUE, "name" varchar(200) NULL, "tstamp" timestamp with time zone NOT NULL, "args" text NULL, "kwargs" text NULL, "eta" timestamp with time zone NULL, "expires" timestamp with time zone NULL, "result" text NULL, "traceback" text NULL, "runtime" double precision NULL, "retries" integer NOT NULL, "worker_id" integer NULL, "hidden" boolean NOT NULL);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "djcelery_periodictask" ADD CONSTRAINT "interval_id_refs_id_672c7616f2054349" FOREIGN KEY ("interval_id") REFERENCES "djcelery_intervalschedule" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "djcelery_periodictask_interval_id" ON "djcelery_periodictask" ("interval_id");" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "djcelery_periodictask" ADD CONSTRAINT "crontab_id_refs_id_2c92a393ebff5e74" FOREIGN KEY ("crontab_id") REFERENCES "djcelery_crontabschedule" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "djcelery_periodictask_crontab_id" ON "djcelery_periodictask" ("crontab_id");" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "djcelery_workerstate_last_heartbeat" ON "djcelery_workerstate" ("last_heartbeat");" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_state" ON "djcelery_taskstate" ("state");" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_state_like" ON "djcelery_taskstate" ("state" varchar_pattern_ops);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_name" ON "djcelery_taskstate" ("name");" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_name_like" ON "djcelery_taskstate" ("name" varchar_pattern_ops);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_tstamp" ON "djcelery_taskstate" ("tstamp");" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "djcelery_taskstate" ADD CONSTRAINT "worker_id_refs_id_13af6e2204e3453a" FOREIGN KEY ("worker_id") REFERENCES "djcelery_workerstate" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_worker_id" ON "djcelery_taskstate" ("worker_id");" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_hidden" ON "djcelery_taskstate" ("hidden");" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "djcelery_periodictask" ADD COLUMN "description" text NOT NULL DEFAULT '';" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "djcelery_periodictask" ALTER COLUMN "description" TYPE text, ALTER COLUMN "description" SET NOT NULL, ALTER COLUMN "description" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "celery_taskmeta" ADD COLUMN "hidden" boolean NOT NULL DEFAULT False;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "celery_taskmeta" ALTER COLUMN "hidden" TYPE boolean, ALTER COLUMN "hidden" SET NOT NULL, ALTER COLUMN "hidden" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "celery_tasksetmeta" ADD COLUMN "hidden" boolean NOT NULL DEFAULT False;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "celery_tasksetmeta" ALTER COLUMN "hidden" TYPE boolean, ALTER COLUMN "hidden" SET NOT NULL, ALTER COLUMN "hidden" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "celery_taskmeta_hidden" ON "celery_taskmeta" ("hidden");" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "celery_tasksetmeta_hidden" ON "celery_tasksetmeta" ("hidden");" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "djcelery_crontabschedule" ADD COLUMN "day_of_month" varchar(64) NOT NULL DEFAULT '*';" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "djcelery_crontabschedule" ALTER COLUMN "day_of_month" TYPE varchar(64), ALTER COLUMN "day_of_month" SET NOT NULL, ALTER COLUMN "day_of_month" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "djcelery_crontabschedule" ADD COLUMN "month_of_year" varchar(64) NOT NULL DEFAULT '*';" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "djcelery_crontabschedule" ALTER COLUMN "month_of_year" TYPE varchar(64), ALTER COLUMN "month_of_year" SET NOT NULL, ALTER COLUMN "month_of_year" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "celery_taskmeta" ADD COLUMN "meta" text NULL;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE TABLE "hoods_neighborhood" ("id" serial NOT NULL PRIMARY KEY, "name" varchar(64) NOT NULL, "region_id" integer NOT NULL);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "SELECT AddGeometryColumn('hoods_neighborhood', 'mpoly', 4326, 'MULTIPOLYGON', 2);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ALTER "mpoly" SET NOT NULL;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "hoods_neighborhood_mpoly_id" ON "hoods_neighborhood" USING GIST ( "mpoly" GIST_GEOMETRY_OPS );" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ADD COLUMN "city" varchar(64) NOT NULL DEFAULT 'default';" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ALTER COLUMN "city" TYPE varchar(64), ALTER COLUMN "city" SET NOT NULL, ALTER COLUMN "city" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE TABLE "data_fire" ("id" serial NOT NULL PRIMARY KEY, "address" varchar(100) NOT NULL, "incident_number" varchar(10) NOT NULL, "incident_type" varchar(50) NOT NULL, "aggregate_incident_type" varchar(50) NOT NULL, "date" timestamp with time zone NOT NULL);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_fire', 'point', 4326, 'POINT', 2);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "data_fire" ALTER "point" SET NOT NULL;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "data_fire_point_id" ON "data_fire" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE TABLE "data_landpermit" ("id" serial NOT NULL PRIMARY KEY, "permit_type" varchar(30) NOT NULL, "status" varchar(50) NOT NULL, "application_date" timestamp with time zone NOT NULL, "applicant_name" varchar(100) NOT NULL, "permit_number" integer NOT NULL, "edg_required" boolean NOT NULL, "category" varchar(30) NOT NULL, "appealed" boolean NOT NULL, "address" varchar(100) NOT NULL, "description" text NOT NULL, "value" integer NOT NULL, "decision_type" varchar(1) NOT NULL, "url" varchar(200) NOT NULL);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_landpermit', 'point', 4326, 'POINT', 2);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "ALTER TABLE "data_landpermit" ALTER "point" SET NOT NULL;" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_point_id" ON "data_landpermit" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "CREATE TABLE "data_buildingpermit" ("id" serial NOT NULL PRIMARY KEY, "permit_type" varchar(30) NOT NULL, "status" varchar(50) NOT NULL, "application_date" timestamp with time zone NOT NULL, "work_type" varchar(30) NOT NULL, "applicant_name" varchar(100) NOT NULL, "permit_number" integer NOT NULL, "category" varchar(30) NOT NULL, "action_type" varchar(10) NOT NULL, "address" varchar(100) NOT NULL, "description" text NOT NULL, "value" integer NOT NULL, "url" varchar(200) NOT NULL);" with params "[]"
-[13/May/2013 23:04:24] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_buildingpermit', 'point', 4326, 'POINT', 2);" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ALTER "point" SET NOT NULL;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_point_id" ON "data_buildingpermit" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "CREATE TABLE "data_violation" ("id" serial NOT NULL PRIMARY KEY, "case_number" integer NOT NULL, "case_type" varchar(40) NOT NULL, "address" varchar(100) NOT NULL, "description" text NOT NULL, "case_group" varchar(40) NOT NULL, "category" varchar(40) NOT NULL, "date_case_created" timestamp with time zone NOT NULL, "date_last_inspection" timestamp with time zone NULL, "last_inspection_result" varchar(10) NULL, "status" varchar(32) NOT NULL, "url" varchar(200) NOT NULL);" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_violation', 'point', 4326, 'POINT', 2);" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_violation" ALTER "point" SET NOT NULL;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "CREATE INDEX "data_violation_point_id" ON "data_violation" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "CREATE TABLE "data_foodviolation" ("id" serial NOT NULL PRIMARY KEY, "name" varchar(100) NOT NULL, "program_identifier" varchar(100) NOT NULL, "inspection_date" timestamp with time zone NOT NULL, "place_description" varchar(50) NOT NULL, "address" varchar(100) NOT NULL, "business_name" varchar(100) NOT NULL, "inspection_type" varchar(50) NOT NULL, "violation_type" varchar(10) NOT NULL, "violation_code" varchar(4) NOT NULL, "violation_description" varchar(250) NOT NULL, "inspection_serial_num" varchar(10) NOT NULL, "violation_record_num" varchar(10) NOT NULL);" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_foodviolation', 'point', 4326, 'POINT', 2);" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ALTER "point" SET NOT NULL;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_point_id" ON "data_foodviolation" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "CREATE TABLE "data_police" ("id" serial NOT NULL PRIMARY KEY, "general_offense_number" integer NOT NULL, "cad_cdw_id" integer NULL, "cad_event_number" integer NULL, "event_clearance_code" integer NULL, "event_clearance_description" varchar(32) NULL, "event_clearance_group" varchar(32) NULL, "event_clearance_date" timestamp with time zone NULL, "rms_cdw_id" integer NULL, "offense_code" varchar(5) NULL, "offense_code_extension" integer NULL, "offense_type" varchar(32) NULL, "summary_offense" varchar(5) NULL, "summarized_offense" varchar(32) NULL, "date_reported" timestamp with time zone NULL, "hundred_block_location" varchar(50) NOT NULL, "district_sector" varchar(1) NOT NULL, "zone_beat" varchar(2) NOT NULL, "census_tract" double precision NOT NULL, "event_detail" varchar(32) NOT NULL, "event_category" varchar(32) NOT NULL, "event_aggregate_category" varchar(32) NOT NULL, "effective_date" timestamp with time zone NOT NULL);" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_police', 'point', 4326, 'POINT', 2);" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER "point" SET NOT NULL;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "CREATE INDEX "data_police_point_id" ON "data_police" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_police" DROP COLUMN "summary_offense" CASCADE;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_police" ADD COLUMN "summary_offense_code" varchar(5) NULL;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "summary_offense_code" TYPE varchar(5), ALTER COLUMN "summary_offense_code" DROP NOT NULL, ALTER COLUMN "summary_offense_code" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:08] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "effective_date" TYPE timestamp with time zone, ALTER COLUMN "effective_date" DROP NOT NULL, ALTER COLUMN "effective_date" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -290,7 +155,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -301,7 +166,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -312,7 +177,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -323,8 +188,8 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "event_detail" TYPE varchar(32), ALTER COLUMN "event_detail" DROP NOT NULL, ALTER COLUMN "event_detail" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "event_aggregate_category" TYPE varchar(32), ALTER COLUMN "event_aggregate_category" DROP NOT NULL, ALTER COLUMN "event_aggregate_category" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -335,7 +200,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -346,7 +211,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -357,7 +222,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -368,8 +233,8 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "event_category" TYPE varchar(32), ALTER COLUMN "event_category" DROP NOT NULL, ALTER COLUMN "event_category" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "cad_event_number" TYPE bigint, ALTER COLUMN "cad_event_number" DROP NOT NULL, ALTER COLUMN "cad_event_number" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -380,7 +245,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -391,7 +256,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -402,7 +267,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -413,8 +278,8 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "effective_date" TYPE timestamp with time zone, ALTER COLUMN "effective_date" DROP NOT NULL, ALTER COLUMN "effective_date" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "event_detail" TYPE varchar(100), ALTER COLUMN "event_detail" DROP NOT NULL, ALTER COLUMN "event_detail" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -425,7 +290,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -436,7 +301,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -447,7 +312,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -458,8 +323,8 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "event_aggregate_category" TYPE varchar(32), ALTER COLUMN "event_aggregate_category" DROP NOT NULL, ALTER COLUMN "event_aggregate_category" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "event_clearance_description" TYPE varchar(100), ALTER COLUMN "event_clearance_description" DROP NOT NULL, ALTER COLUMN "event_clearance_description" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -470,7 +335,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -481,7 +346,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -492,7 +357,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -503,8 +368,8 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "cad_event_number" TYPE bigint, ALTER COLUMN "cad_event_number" DROP NOT NULL, ALTER COLUMN "cad_event_number" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "offense_type" TYPE varchar(100), ALTER COLUMN "offense_type" DROP NOT NULL, ALTER COLUMN "offense_type" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -515,7 +380,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -526,7 +391,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -537,7 +402,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -548,8 +413,8 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "event_detail" TYPE varchar(100), ALTER COLUMN "event_detail" DROP NOT NULL, ALTER COLUMN "event_detail" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "census_tract" TYPE double precision, ALTER COLUMN "census_tract" DROP NOT NULL, ALTER COLUMN "census_tract" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -560,7 +425,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -571,7 +436,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -582,7 +447,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -593,8 +458,8 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "event_clearance_description" TYPE varchar(100), ALTER COLUMN "event_clearance_description" DROP NOT NULL, ALTER COLUMN "event_clearance_description" DROP DEFAULT;" with params "[]"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "zone_beat" TYPE varchar(2), ALTER COLUMN "zone_beat" DROP NOT NULL, ALTER COLUMN "zone_beat" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -605,7 +470,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -616,7 +481,7 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -627,9 +492,289 @@ SyntaxError: invalid syntax
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_police']"
-[13/May/2013 23:04:25] DEBUG [south:270] execute "
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "district_sector" TYPE varchar(1), ALTER COLUMN "district_sector" DROP NOT NULL, ALTER COLUMN "district_sector" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.constraint_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_landpermit']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.key_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_landpermit']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.constraint_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_landpermit']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.key_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_landpermit']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "ALTER TABLE "data_landpermit" ALTER COLUMN "permit_type" TYPE varchar(40), ALTER COLUMN "permit_type" SET NOT NULL, ALTER COLUMN "permit_type" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.constraint_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_buildingpermit']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.key_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_buildingpermit']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.constraint_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_buildingpermit']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.key_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_buildingpermit']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ALTER COLUMN "action_type" TYPE varchar(50), ALTER COLUMN "action_type" SET NOT NULL, ALTER COLUMN "action_type" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_category" ON "data_buildingpermit" ("category");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_value" ON "data_buildingpermit" ("value");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_permit_number" ON "data_buildingpermit" ("permit_number");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_violation_type" ON "data_foodviolation" ("violation_type");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_inspection_date" ON "data_foodviolation" ("inspection_date");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_fire_date" ON "data_fire" ("date");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_fire_incident_number" ON "data_fire" ("incident_number");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_fire_aggregate_incident_type" ON "data_fire" ("aggregate_incident_type");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_category" ON "data_landpermit" ("category");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_value" ON "data_landpermit" ("value");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_permit_type" ON "data_landpermit" ("permit_type");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_permit_number" ON "data_landpermit" ("permit_number");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_application_date" ON "data_landpermit" ("application_date");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_violation_category" ON "data_violation" ("category");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_violation_case_number" ON "data_violation" ("case_number");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_violation_date_case_created" ON "data_violation" ("date_case_created");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_police_effective_date" ON "data_police" ("effective_date");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_police_general_offense_number" ON "data_police" ("general_offense_number");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_police_event_clearance_date" ON "data_police" ("event_clearance_date");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_police_date_reported" ON "data_police" ("date_reported");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "CREATE INDEX "data_police_event_aggregate_category" ON "data_police" ("event_aggregate_category");" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.constraint_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.key_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.constraint_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.key_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "hundred_block_location" TYPE varchar(80), ALTER COLUMN "hundred_block_location" SET NOT NULL, ALTER COLUMN "hundred_block_location" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.constraint_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.key_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:09] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.constraint_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:10] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.key_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:10] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "offense_code" TYPE varchar(4), ALTER COLUMN "offense_code" DROP NOT NULL, ALTER COLUMN "offense_code" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:10] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.constraint_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:10] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.key_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:10] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.constraint_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:10] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.key_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:10] DEBUG [south:270] execute "ALTER TABLE "data_police" ALTER COLUMN "event_clearance_group" TYPE varchar(34), ALTER COLUMN "event_clearance_group" DROP NOT NULL, ALTER COLUMN "event_clearance_group" DROP DEFAULT;" with params "[]"
+[16/May/2013 16:51:10] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.constraint_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:10] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.key_column_usage AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %s AND
+                    kc.table_name = %s
+            " with params "['public', 'data_police']"
+[16/May/2013 16:51:10] DEBUG [south:270] execute "
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
                     kc.table_schema = c.table_schema AND
                     kc.table_name = c.table_name AND
