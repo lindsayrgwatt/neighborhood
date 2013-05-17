@@ -3,10 +3,13 @@ import datetime
 from south.db import db
 from south.v2 import DataMigration
 from django.db import models
+from data.load import create_violation_aggregates
 
 class Migration(DataMigration):
 
     def forwards(self, orm):
+        create_violation_aggregates()
+        
         for violation in orm.Violation.objects.all():
             violation.group = orm.ViolationCategory.objects.get(category=violation.case_group)
             violation.aggregate = violation.group.aggregate
