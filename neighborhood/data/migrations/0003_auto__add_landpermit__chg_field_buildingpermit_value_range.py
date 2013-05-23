@@ -8,25 +8,31 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'FoodViolation'
-        db.create_table('data_foodviolation', (
+        # Adding model 'LandPermit'
+        db.create_table('data_landpermit', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('inspection_date', self.gf('django.db.models.fields.DateField')(db_index=True)),
-            ('address', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('group', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data.ViolationCategory'])),
-            ('code', self.gf('django.db.models.fields.CharField')(max_length=4)),
-            ('description', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('violation_num', self.gf('django.db.models.fields.CharField')(max_length=10)),
+            ('application_date', self.gf('django.db.models.fields.DateField')(db_index=True)),
+            ('permit_number', self.gf('django.db.models.fields.IntegerField')(db_index=True)),
+            ('address', self.gf('django.db.models.fields.CharField')(max_length=60)),
+            ('description', self.gf('django.db.models.fields.TextField')()),
+            ('value', self.gf('django.db.models.fields.IntegerField')(db_index=True)),
+            ('value_range', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data.PermitValue'])),
+            ('url', self.gf('django.db.models.fields.URLField')(max_length=200)),
             ('point', self.gf('django.contrib.gis.db.models.fields.PointField')()),
         ))
-        db.send_create_signal('data', ['FoodViolation'])
+        db.send_create_signal('data', ['LandPermit'])
 
+
+        # Changing field 'BuildingPermit.value_range'
+        db.alter_column('data_buildingpermit', 'value_range_id', self.gf('django.db.models.fields.related.ForeignKey')(default=1, to=orm['data.PermitValue']))
 
     def backwards(self, orm):
-        # Deleting model 'FoodViolation'
-        db.delete_table('data_foodviolation')
+        # Deleting model 'LandPermit'
+        db.delete_table('data_landpermit')
 
+
+        # Changing field 'BuildingPermit.value_range'
+        db.alter_column('data_buildingpermit', 'value_range_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data.PermitValue'], null=True))
 
     models = {
         'data.buildingpermit': {
@@ -62,18 +68,6 @@ class Migration(SchemaMigration):
             'description': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '40'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
         },
-        'data.foodviolation': {
-            'Meta': {'ordering': "['-inspection_date']", 'object_name': 'FoodViolation'},
-            'address': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'code': ('django.db.models.fields.CharField', [], {'max_length': '4'}),
-            'description': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'group': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data.ViolationCategory']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'inspection_date': ('django.db.models.fields.DateField', [], {'db_index': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'point': ('django.contrib.gis.db.models.fields.PointField', [], {}),
-            'violation_num': ('django.db.models.fields.CharField', [], {'max_length': '10'})
-        },
         'data.landpermit': {
             'Meta': {'ordering': "['-application_date', '-permit_number']", 'object_name': 'LandPermit'},
             'address': ('django.db.models.fields.CharField', [], {'max_length': '60'}),
@@ -91,28 +85,6 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'label': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
             'value': ('django.db.models.fields.IntegerField', [], {'unique': 'True'})
-        },
-        'data.violation': {
-            'Meta': {'ordering': "['-case_number']", 'object_name': 'Violation'},
-            'address': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'case_number': ('django.db.models.fields.IntegerField', [], {'unique': 'True'}),
-            'date_case_created': ('django.db.models.fields.DateField', [], {'db_index': 'True'}),
-            'description': ('django.db.models.fields.TextField', [], {}),
-            'group': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data.ViolationCategory']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'point': ('django.contrib.gis.db.models.fields.PointField', [], {}),
-            'url': ('django.db.models.fields.URLField', [], {'max_length': '200'})
-        },
-        'data.violationaggregatecategory': {
-            'Meta': {'ordering': "['category']", 'object_name': 'ViolationAggregateCategory'},
-            'category': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '40'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
-        },
-        'data.violationcategory': {
-            'Meta': {'ordering': "['category']", 'object_name': 'ViolationCategory'},
-            'aggregate': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data.ViolationAggregateCategory']"}),
-            'category': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '40'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
         }
     }
 

@@ -101,6 +101,7 @@ INSTALLED_APPS = (
     'django.contrib.gis',
     'south',
     'djcelery',
+    'crispy_forms',
     'hoods',
     'data',
 )
@@ -109,35 +110,5 @@ djcelery.setup_loader()
 
 CELERY_IMPORTS = ("data.tasks", )
 CELERY_DISABLE_RATE_LIMITS = True
-CELERYBEAT_SCHEDULE = { # The 2 minute crontab is for local testing to make sure queue working
-    'get-fire-data': {
-        'task': 'tasks.get_fire',
-        #'schedule': crontab(minute="*/2"),
-        'schedule': crontab(minute='2', hour='11'),
-    },
-    'get-land-use-data': {
-        'task': 'tasks.get_land_use',
-        #'schedule': crontab(minute='*/2'),
-        'schedule': crontab(minute='7', hour='11'),
-    },
-    'get-building-permit-data': {
-        'task': 'tasks.get_building_permits',
-        #'schedule': crontab(minute='*/1'),
-        'schedule': crontab(minute='12', hour='11'),
-    },
-    'get-violations-data': {
-        'task': 'tasks.get_violations',
-        #'schedule': crontab(minute='*/2'),
-        'schedule': crontab(minute='17', hour='11'),
-    },
-    'get-food-violations-data' : {
-        'task': 'tasks.get_food_violations',
-        #'schedule':crontab(minute='*/2'),
-        'schedule': crontab(minute='22', hour='11'),
-    },
-    'get-police-data' : {
-        'task': 'tasks.get_police',
-        #'schedule': crontab(minute="*/2"),
-        'schedule': crontab(minute='27', hour='11'),
-    }
-}
+
+CRISPY_TEMPLATE_PACK = 'bootstrap'

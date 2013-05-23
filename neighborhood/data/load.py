@@ -11,9 +11,9 @@ from django.contrib.gis.geos import fromstr
 from django.contrib.gis.geos.error import GEOSException
 
 from data.models import FireIncidentAggregateType, FireIncidentType, Fire
-from data.models import PermitValue, LandPermit, BuildingPermit
+from data.models import PermitValue, BuildingPermit, LandPermit
 from data.models import ViolationAggregateCategory, ViolationCategory, Violation, FoodViolation
-from data.models import HundredBlockSection, ZoneBeat, DistrictSector, CensusTract, ClearanceCode, PoliceEventDetail, PoliceEventAggregateGroup, PoliceEventGroup, PoliceOffenseCode, PoliceOffenseCodeExtension, PoliceSummaryOffenseCode, Police
+from data.models import PoliceEventAggregateGroup, PoliceEventGroup, Police911Call, Police911Incident
 
 log = logging.getLogger(__name__)
 
@@ -168,21 +168,25 @@ def create_fire_incident_objects():
 def get_fire_data():
     # Loads data of City of Seattle 911 Fire calls
     # 
-    # JSON response should be of form:
+    # JSON response should be of list of form:
     # {
-    #   u'report_location': {u'latitude': u'47.701756', u'needs_recoding': False, u'longitude': u'-122.335022'},
-    #   u'longitude': u'-122.335022',
-    #   u'address': u'10049 College Way N',
-    #   u'latitude': u'47.701756',
-    #   u'incident_number': u'F110104009',
-    #   u'type': u'Aid Response'
+    #   "address" : "2656 Ne University Village St",
+    #   "longitude" : "-122.298492",
+    #   "latitude" : "47.663322",
+    #   "incident_number" : "F130042027",
+    #   "datetime" : 1367525100,
+    #   "type" : "Aid Response",
+    #   "report_location" : {
+    #       "needs_recoding" : false,
+    #       "longitude" : "-122.298492",
+    #       "latitude" : "47.663322"
     # }
     
     base_url = "http://data.seattle.gov/resource/kzjm-xkqj.json"
     
     # Bootstrap with last 24 hours worth of data
     #
-    # Need to include the timestamp parameter or data returned will not include a datetime field (SERIOUSLY)
+    # Need to include the timestamp parameter or data returned will not include a datetime field
     #
     # No timestamp: http://data.seattle.gov/resource/kzjm-xkqj.json
     # Timestamp: http://data.seattle.gov/resource/kzjm-xkqj.json?%24where=datetime%20%3E%20'2013-05-02%2013:00:00'
@@ -193,7 +197,6 @@ def get_fire_data():
         timestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
     else:
         latest = Fire.objects.latest('date')
-        tz = pytz.timezone('US/Pacific')
         timestamp = latest.date.astimezone(tz).strftime("%F %H:%M:%S")
     
     query = "$where=datetime > '%s'" % timestamp
@@ -206,19 +209,17 @@ def get_fire_data():
         if response.code == 200:
             all_data = json.load(response)
             
-            tz = pytz.timezone("US/Pacific")
             for data in all_data:
                 if 'incident_number' in data: # First response may be something like: {u'type': u' --T::00'}
                     try:
                         point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
                         
-                        fmt = '%Y-%m-%d %H:%M:%S %Z%z'
-                        
                         initial_date = datetime.datetime.fromtimestamp(float(data['datetime']))               
-                        updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
+                        updated_date = tz.localize(initial_date)
                         date = updated_date
                         
-                        incident_category_obj, created = FireIncidentType.objects.get_or_create(description=data['type'].strip())
+                        description = data['type'].strip()
+                        incident_category_obj, created = FireIncidentType.objects.get_or_create(description=description)
                         
                         # Use get_or_create so that we never risk creating the same incident twice
                         fire_obj, created = Fire.objects.get_or_create(
@@ -308,6 +309,128 @@ def create_permit_ranges():
     
 
 
+def get_building_permits_data():
+    # Loads data of City of Seattle building permits
+    # 
+    # JSON response should be of form:
+    # {
+    # "permit_type" : "Construction",
+    #  "location" : {
+    #    "needs_recoding" : false,
+    #    "longitude" : "-122.369243",
+    #    "latitude" : "47.54291191"
+    #  },
+    #  "status" : "Application Accepted",
+    #  "application_date" : "2013-05-09T00:00:00", >> THIS IS ACTUALLY A DATE STAMP, NOT A TIMESTAMP
+    #  "work_type" : "Plan Review",
+    #  "applicant_name" : "BERNARD, ANDREW",
+    #  "application_permit_number" : "6358023",
+    #  "category" : "SINGLE FAMILY / DUPLEX",
+    #  "action_type" : "NEW",
+    #  "address" : "6646 HIGH POINT DR SW",
+    #  "description" : "Establish use as and construct new single family residence with attached garage, per plans.",
+    #  "value" : "224630",
+    #  "longitude" : "-122.369243",
+    #  "latitude" : "47.54291191",
+    #  "permit_and_complaint_status_url" : {
+    #    "url" : "http://web1.seattle.gov/dpd/PermitStatus/Project.aspx?id=6358023"
+    #  }
+    # }
+    
+    base_url = "http://data.seattle.gov/resource/mags-97de.json"
+    
+    if BuildingPermit.objects.count() == 0:
+        datestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
+    else:
+        latest = BuildingPermit.objects.latest('application_date')
+        datestamp = latest.application_date.strftime("%F %H:%M:%S")
+    
+    query = "$where=application_date > '%s'" % datestamp
+    url = base_url + "?" + query.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
+    
+    try:
+        response = urllib2.urlopen(url)
+        
+        if response.code == 200:
+            all_data = json.load(response)
+            
+            for data in all_data:
+                if 'permit_type' in data: # Test that it's a valid record before processing
+                    try:
+                        point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
+                        
+                        initial_date = datetime.datetime.strptime(data['application_date'], "%Y-%m-%dT%H:%M:%S")
+                        date = initial_date.date()
+                        
+                        # Use get_or_create so that we never risk creating the same incident twice
+                        build_obj, created = BuildingPermit.objects.get_or_create(
+                                                            permit_number=data['application_permit_number'],
+                                                            defaults={
+                                                                'permit_type':data['permit_type'],
+                                                                'application_date':date,
+                                                                'address':data['address'],
+                                                                'description':data['description'],
+                                                                'value':int(data['value']),
+                                                                'url':data['permit_and_complaint_status_url']['url'],
+                                                                'point':point
+                                                            })
+                    
+                    # From experience, occasionally have missing latitude/longitude
+                    except KeyError, e:
+                        log.error("Missing key %s in building permit data so skipping :: %s" % (e, data['application_permit_number']))
+        
+        else:
+            log.error("Non-200 code on get_building_permits_data: %s" % str(response.code))
+    except urllib2.HTTPError, e:
+        log.error("Error getting building permit data: %s" % e.getcode())
+    
+
+
+def load_historical_building_permit_data():
+    building = open(os.path.dirname(__file__) + "/historical/Building_Permits___Current.csv")
+    
+    reader = csv.reader(building, delimiter=',', quotechar='"')
+    
+    new_record = 0
+    
+    counter = 0
+    for line in reader:
+        if counter != 0:
+            initial_date = datetime.datetime.strptime(line[9], "%m/%d/%Y")
+            date = initial_date.date()
+            
+            if date >= CUTOFF_DATE.date() and line[16] and line[17]: # Skip if no lat/longs
+                try:
+                    point = fromstr("POINT(%s %s)" % (line[17], line[16]))
+                    
+                    # Use get_or_create so that we never risk creating the same incident twice
+                    building_obj, created = BuildingPermit.objects.get_or_create(
+                                                        permit_number=line[0],
+                                                        defaults={
+                                                            'permit_type':line[1],
+                                                            'application_date':date,
+                                                            'address':line[2],
+                                                            'description':line[3],
+                                                            'value':int(float(line[7][1:len(line[7])])), # Remove leading $
+                                                            'url':line[15],
+                                                            'point':point
+                                                        })
+                    
+                    if created:
+                        new_record += 1
+                except GEOSException, e:
+                    log.error("Geo Error %s importing historical building permit record with permit number %s" % (e, line[0])) # Means no lat/lng
+        
+        if counter % 1000 == 0:
+            log.info("Processed %d records. %s" % (counter, datetime.datetime.now().strftime("%H:%M:%S")))
+        
+        counter += 1
+    
+    log.info("Created %d new building permit records. %s" % (new_record, datetime.datetime.now().strftime("%H:%M:%S")))
+    
+    building.close()
+
+
 def get_land_use_data():
     # Loads data of City of Seattle land use permits
     # 
@@ -320,7 +443,7 @@ def get_land_use_data():
     #     "latitude" : "47.54382"
     #   },
     #   "status" : "Application Accepted",
-    #   "application_date" : "2013-05-09T00:00:00",
+    #   "application_date" : "2013-05-09T00:00:00", << THIS IS TECHNICALLY A DATE STAMP
     #   "applicant_name" : "BERNARD, ANDREW",
     #   "application_permit_number" : "3015071",
     #   "edg_required" : "N",
@@ -340,13 +463,12 @@ def get_land_use_data():
     base_url = "http://data.seattle.gov/resource/uyyd-8gak.json"
     
     if LandPermit.objects.count() == 0:
-        timestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
+        datestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
     else:
         latest = LandPermit.objects.latest('application_date')
-        tz = pytz.timezone('US/Pacific')
-        timestamp = latest.application_date.astimezone(tz).strftime("%F %H:%M:%S")
+        datestamp = latest.application_date.strftime("%F %H:%M:%S")
     
-    query = "$where=application_date > '%s'" % timestamp
+    query = "$where=application_date > '%s'" % datestamp
     url = base_url + "?" + query.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
     
     try:
@@ -355,40 +477,26 @@ def get_land_use_data():
         if response.code == 200:
             all_data = json.load(response)
             
-            tz = pytz.timezone("US/Pacific")
             for data in all_data:
                 if 'permit_type' in data: # Test that it's a valid record before processing
                     try:
                         point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
                         
                         initial_date = datetime.datetime.strptime(data['application_date'], "%Y-%m-%dT%H:%M:%S")
-                        
-                        updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
-                        
-                        date = updated_date
-                        
-                        appealed = True if data['appealed_'] == "Y" else False
-                        edg_required = True if data['edg_required'] == "Y" else False
+                        date = initial_date.date()
                         
                         # Use get_or_create so that we never risk creating the same incident twice
                         land_obj, created = LandPermit.objects.get_or_create(
                                                             permit_number=data['application_permit_number'],
                                                             defaults={
-                                                                'permit_type':data['permit_type'],
-                                                                'status':data['status'],
                                                                 'application_date':date,
-                                                                'applicant_name':data['applicant_name'],
-                                                                'edg_required':edg_required,
-                                                                'category':data['category'],
-                                                                'appealed':appealed,
                                                                 'address':data['address'],
                                                                 'description':data['description'],
                                                                 'value':int(data['value']),
-                                                                'decision_type':data['decision_type'],
                                                                 'url':data['permit_and_complaint_status_url']['url'],
                                                                 'point':point
                                                             })
-                        
+                    
                     # From experience, occasionally have missing latitude/longitude
                     except KeyError, e:
                         log.error("Missing key %s in land use data so skipping :: %s" % (e, data['application_permit_number']))
@@ -397,90 +505,7 @@ def get_land_use_data():
             log.error("Non-200 code on get_land_use_data: %s" % str(response.code))
     except urllib2.HTTPError, e:
         log.error("Error getting land use permit data: %s" % e.getcode())
-
-
-def get_building_permits_data():
-    # Loads data of City of Seattle building permits
-    # 
-    # JSON response should be of form:
-    # {
-    # "permit_type" : "Construction",
-    #  "location" : {
-    #    "needs_recoding" : false,
-    #    "longitude" : "-122.369243",
-    #    "latitude" : "47.54291191"
-    #  },
-    #  "status" : "Application Accepted",
-    #  "application_date" : "2013-05-09T00:00:00",
-    #  "work_type" : "Plan Review",
-    #  "applicant_name" : "BERNARD, ANDREW",
-    #  "application_permit_number" : "6358023",
-    #  "category" : "SINGLE FAMILY / DUPLEX",
-    #  "action_type" : "NEW",
-    #  "address" : "6646 HIGH POINT DR SW",
-    #  "description" : "Establish use as and construct new single family residence with attached garage, per plans.",
-    #  "value" : "224630",
-    #  "longitude" : "-122.369243",
-    #  "latitude" : "47.54291191",
-    #  "permit_and_complaint_status_url" : {
-    #    "url" : "http://web1.seattle.gov/dpd/PermitStatus/Project.aspx?id=6358023"
-    #  }
-    # }
     
-    base_url = "http://data.seattle.gov/resource/mags-97de.json"
-    
-    if BuildingPermit.objects.count() == 0:
-        timestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
-    else:
-        latest = BuildingPermit.objects.latest('application_date')
-        tz = pytz.timezone('US/Pacific')
-        timestamp = latest.application_date.astimezone(tz).strftime("%F %H:%M:%S")
-        
-    query = "$where=application_date > '%s'" % timestamp
-    url = base_url + "?" + query.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
-    
-    try:
-        response = urllib2.urlopen(url)
-        
-        if response.code == 200:
-            all_data = json.load(response)
-            
-            tz = pytz.timezone("US/Pacific")
-            for data in all_data:
-                if 'permit_type' in data: # Test that it's a valid record before processing
-                    try:
-                        point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
-                        
-                        initial_date = datetime.datetime.strptime(data['application_date'], "%Y-%m-%dT%H:%M:%S")
-                        updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
-                        date = updated_date
-                        
-                        # Use get_or_create so that we never risk creating the same incident twice
-                        build_obj, created = BuildingPermit.objects.get_or_create(
-                                                            permit_number=data['application_permit_number'],
-                                                            defaults={
-                                                                'permit_type':data['permit_type'],
-                                                                'status':data['status'],
-                                                                'application_date':date,
-                                                                'applicant_name':data['applicant_name'],
-                                                                'category':data['category'],
-                                                                'action_type':data['action_type'],
-                                                                'address':data['address'],
-                                                                'description':data['description'],
-                                                                'value':int(data['value']),
-                                                                'url':data['permit_and_complaint_status_url']['url'],
-                                                                'work_type':data['work_type'],
-                                                                'point':point
-                                                            })
-                                                            
-                    # From experience, occasionally have missing latitude/longitude
-                    except KeyError, e:
-                        log.error("Missing key %s in building permit data so skipping :: %s" % (e, data['application_permit_number']))
-                        
-        else:
-            log.error("Non-200 code on get_building_permits_data: %s" % str(response.code))
-    except urllib2.HTTPError, e:
-        log.error("Error getting building permit data: %s" % e.getcode())
 
 
 def load_historical_land_use_data():
@@ -494,113 +519,48 @@ def load_historical_land_use_data():
     for line in reader:
         if counter != 0:
             initial_date = datetime.datetime.strptime(line[9], "%m/%d/%Y")
-            updated_date = tz.localize(initial_date)
-            date = updated_date
+            date = initial_date.date()
             
-            if date >= CUTOFF_DATE and line[16] and line[17]: # Skip if no lat/longs
+            if date >= CUTOFF_DATE.date() and line[16] and line[17]: # Skip if no lat/longs
                 try:
                     point = fromstr("POINT(%s %s)" % (line[17], line[16]))
-                    
-                    appealed = True if line[11] == "Y" else False
-                    edg_required = True if line[6] == "Y" else False
                     
                     # Use get_or_create so that we never risk creating the same incident twice
                     land_obj, created = LandPermit.objects.get_or_create(
                                                         permit_number=int(line[0]),
                                                         defaults={
-                                                            'permit_type':line[1],
-                                                            'status':line[13],
                                                             'application_date':date,
-                                                            'applicant_name':line[8],
-                                                            'edg_required':edg_required,
-                                                            'category':line[4],
-                                                            'appealed':appealed,
                                                             'address':line[2],
                                                             'description':line[3],
                                                             'value':int(float(line[7][1:len(line[7])])), # Remove leading $
-                                                            'decision_type':line[5][0:1],
                                                             'url':line[15],
                                                             'point':point
                                                         })
-                                                        
+                    
                     if created:
                         new_record += 1
                 except GEOSException, e:
                     log.error("Geo Error %s importing historical land use record with permit number %s" % (e, line[0]))
-                    
+        
         if counter % 1000 == 0:
             log.info("Processed %d records. %s" % (counter, datetime.datetime.now().strftime("%H:%M:%S")))
-            
-        counter += 1
         
+        counter += 1
+    
     log.info("Created %d new land use records. %s" % (new_record, datetime.datetime.now().strftime("%H:%M:%S")))
     
     land.close()
 
 
-def load_historical_building_permit_data():
-    building = open(os.path.dirname(__file__) + "/historical/Building_Permits___Current.csv")
-    
-    reader = csv.reader(building, delimiter=',', quotechar='"')
-    
-    new_record = 0
-    
-    counter = 0
-    for line in reader:
-        if counter != 0:
-            initial_date = datetime.datetime.strptime(line[9], "%m/%d/%Y")
-            updated_date = tz.localize(initial_date)
-            date = updated_date
-            
-            if date >= CUTOFF_DATE and line[16] and line[17]: # Skip if no lat/longs
-                try:
-                    point = fromstr("POINT(%s %s)" % (line[17], line[16]))
-                    
-                    # Use get_or_create so that we never risk creating the same incident twice
-                    building_obj, created = BuildingPermit.objects.get_or_create(
-                                                        permit_number=line[0],
-                                                        defaults={
-                                                            'permit_type':line[1],
-                                                            'status':line[13],
-                                                            'application_date':date,
-                                                            'applicant_name':line[8],
-                                                            'category':line[4],
-                                                            'action_type':line[5],
-                                                            'address':line[2],
-                                                            'description':line[3],
-                                                            'value':int(float(line[7][1:len(line[7])])), # Remove leading $
-                                                            'work_type':line[6],
-                                                            'url':line[15],
-                                                            'point':point
-                                                        })
-                                                        
-                    if created:
-                        new_record += 1
-                except GEOSException, e:
-                    log.error("Geo Error %s importing historical building permit record with permit number %s" % (e, line[0])) # Means no lat/lng
-                    
-        if counter % 1000 == 0:
-            log.info("Processed %d records. %s" % (counter, datetime.datetime.now().strftime("%H:%M:%S")))
-            
-        counter += 1
-        
-    log.info("Created %d new building permit records. %s" % (new_record, datetime.datetime.now().strftime("%H:%M:%S")))
-    
-    building.close()
-    
-
-
 #################################
 #
-# Code Violations
+# Violations
 #
 def create_violation_aggregates():
     other, status = ViolationAggregateCategory.objects.get_or_create(category='Other')
     noise, status = ViolationAggregateCategory.objects.get_or_create(category='Noise')
     permit, status = ViolationAggregateCategory.objects.get_or_create(category='Permit Issue')
     building, status = ViolationAggregateCategory.objects.get_or_create(category='Vacant/Unfit Building')
-    sign, status = ViolationAggregateCategory.objects.get_or_create(category='Sign Issue')
-    condo, status = ViolationAggregateCategory.objects.get_or_create(category='Condo Coming')
     eviction, status = ViolationAggregateCategory.objects.get_or_create(category='Eviction')
     construction, status = ViolationAggregateCategory.objects.get_or_create(category='Illegal Construction or Clearing')
     housing, status = ViolationAggregateCategory.objects.get_or_create(category='Housing Code Violation')
@@ -617,12 +577,12 @@ def create_violation_aggregates():
         'MECHANICAL':permit,
         'ELECTRICAL':permit,
         'BUILDING AND PREMISES':building,
-        'SIGNS':sign,
-        'CONDO/COOP CONVERSION':condo,
+        'SIGNS':other,
+        'CONDO/COOP CONVERSION':other,
         'JUST CAUSE EVICTION':eviction,
         'SITE':construction,
         '':other,
-        'Other':other,
+        'OTHER':other,
         'VACANT BUILDING':building,
         'HOUSING':housing,
         'BUILDING':construction,
@@ -634,6 +594,54 @@ def create_violation_aggregates():
     for violation in violation_mapping:
         category, status = ViolationCategory.objects.get_or_create(category=violation, aggregate=violation_mapping[violation])
     
+
+
+def load_historical_violations_data():
+    violations = open(os.path.dirname(__file__) + "/historical/Code_Violation_Cases.csv")
+    
+    reader = csv.reader(violations, delimiter=',', quotechar='"')
+    
+    new_record = 0
+    
+    counter = 0
+    for line in reader:
+        if counter != 0:
+            initial_date = datetime.datetime.strptime(line[5], "%m/%d/%Y")
+            date = initial_date.date()
+            
+            if date >= CUTOFF_DATE.date() and line[10] and line[11]: # Skip if missing lat/longs
+                try:
+                    point = fromstr("POINT(%s %s)" % (line[11], line[10]))
+                    
+                    if line[4]: # For some reason, some records don't get a case_group
+                        case_group = ViolationCategory.objects.get(category=line[4])
+                    else:
+                        case_group = ViolationCategory.objects.get(category='OTHER')
+                    
+                    # Use get_or_create so that we never risk creating the same incident twice
+                    violation_obj, created = Violation.objects.get_or_create(
+                                                        case_number=line[0],
+                                                        defaults={
+                                                            'address':line[2],
+                                                            'description':line[3],
+                                                            'group':case_group,
+                                                            'date_case_created':date,
+                                                            'url':line[9],
+                                                            'point':point
+                                                        })
+                    if created:
+                        new_record += 1
+                except GEOSException, e:
+                    log.error("Geo Error %s importing historical violation record with permit number %s" % (e, line[0])) # Means no lat/lng
+        
+        if counter % 1000 == 0:
+            log.info("Processed %d records. %s" % (counter, datetime.datetime.now().strftime("%H:%M:%S")))
+        
+        counter += 1
+    
+    log.info("Created %d new violation records. %s" % (new_record, datetime.datetime.now().strftime("%H:%M:%S")))
+    
+    violations.close()
 
 
 def get_violations_data():
@@ -649,7 +657,7 @@ def get_violations_data():
     #    "longitude" : "-122.242624",
     #    "latitude" : "47.510702"
     #  },
-    #  "date_case_created" : "2013-05-10T00:00:00",
+    #  "date_case_created" : "2013-05-10T00:00:00", << ACTUALLY A DATESTAMP
     #  "case_group" : "ZONING",
     #  "last_inspection_result" : "FAILED",
     #  "address" : "7224 S TAFT ST",
@@ -665,13 +673,12 @@ def get_violations_data():
     base_url = "http://data.seattle.gov/resource/dk8m-pdjf.json"
     
     if Violation.objects.count() == 0:
-        timestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
+        datestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
     else:
         latest = Violation.objects.latest('date_case_created')
-        tz = pytz.timezone('US/Pacific')
-        timestamp = latest.date_case_created.astimezone(tz).strftime("%F %H:%M:%S")
+        datestamp = latest.date_case_created.strftime("%F %H:%M:%S")
     
-    query = "$where=date_case_created > '%s'" % timestamp
+    query = "$where=date_case_created > '%s'" % datestamp
     url = base_url + "?" + query.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
     
     try:
@@ -680,7 +687,6 @@ def get_violations_data():
         if response.code == 200:
             all_data = json.load(response)
             
-            tz = pytz.timezone("US/Pacific")
             for data in all_data:
                 if 'case_number' in data: # Test that it's a valid record before processing
                     try:
@@ -688,26 +694,12 @@ def get_violations_data():
                         
                         # Date case created
                         initial_date = datetime.datetime.strptime(data['date_case_created'], "%Y-%m-%dT%H:%M:%S")
-                        updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
-                        date = updated_date
-                        
-                        # Date last inspection. Not included with every violation
-                        if 'last_inspection_date' in data:
-                            initial_date = datetime.datetime.strptime(data['last_inspection_date'], "%Y-%m-%dT%H:%M:%S")
-                            updated_date = tz.localize(initial_date)
-                            last_inspection_date = updated_date
-                            inspection_result = data['last_inspection_result']
-                        else:
-                            last_inspection_date = None
-                            inspection_result = ''
+                        date = initial_date.date()
                         
                         if 'case_group' in data:
-                            category, status = ViolationCategory.objects.get_or_create(category=data['case_group'],
-                                                            defaults={
-                                                                'aggregate':ViolationAggregateCategory.objects.get(category='Other')
-                                                            })
+                            category, status = ViolationCategory.objects.get_or_create(category=data['case_group'])
                         else:
-                            category = ViolationCategory.objects.get(category='Other')
+                            category = ViolationCategory.objects.get(category='OTHER')
                         
                         aggregate = category.aggregate
                         
@@ -715,190 +707,22 @@ def get_violations_data():
                         violation_obj, created = Violation.objects.get_or_create(
                                                             case_number=data['case_number'],
                                                             defaults={
-                                                                'case_type':data['case_type'],
                                                                 'address':data['address'],
                                                                 'description':data['description'],
                                                                 'group':category,
-                                                                'aggregate':aggregate,
                                                                 'date_case_created':date,
-                                                                'date_last_inspection':last_inspection_date,
-                                                                'last_inspection_result':inspection_result,
-                                                                'status':data['status'],
                                                                 'url':data['permit_and_complaint_status_url']['url'],
                                                                 'point':point
                                                             })
-                        
+                    
                     except KeyError, e:
                         log.error("Missing key %s in violation data so skipping :: %s" % (e, data['case_number']))
-                    
+        
         else:
             log.error("Non-200 code on get_violation_data: %s" % str(response.code))
     except urllib2.HTTPError, e:
         log.error("Error getting code violation data: %s" % e.getcode())
-
-
-def get_food_violations_data():
-    # Loads data of King County food establishment inspection cases
-    # 
-    # JSON response should be of form:
-    # {
-    # "inspection_result" : "Unsatisfactory",
-    #  "phone" : "(206) 947-1460",
-    #  "inspection_business_name" : "@ The PEAK",
-    #  "zip_code" : "98122",
-    #  "inspection_score" : "25",
-    #  "inspection_type" : "Routine Inspection/Field Review",
-    #  "violation_description" : "3400 - Wiping cloths properly used, stored",
-    #  "violation_record_id" : "IV6475303",
-    #  "inspection_closed_business" : false,
-    #  "city" : "SEATTLE",
-    #  "violation_type" : "blue",
-    #  "inspection_date" : "2013-01-25T00:00:00",
-    #  "inspection_serial_num" : "DA2409066",
-    #  "address" : "401 BROADWAY ",
-    #  "description" : "Seating 13-50 - Risk Category III",
-    #  "name" : "@ The PEAK",
-    #  "business_id" : "PR0071429",
-    #  "longitude" : "-122.3211984964",
-    #  "latitude" : "47.6056239308",
-    #  "program_identifier" : "@ The PEAK",
-    #  "violation_points" : "5"
-    # }
     
-    base_url = "http://www.datakc.org/resource/f29f-zza5.json"
-    
-    if FoodViolation.objects.count() == 0:
-        timestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
-    else:
-        latest = FoodViolation.objects.latest('inspection_date')
-        tz = pytz.timezone('US/Pacific')
-        timestamp = latest.inspection_date.astimezone(tz).strftime("%F %H:%M:%S")
-        
-    query = "$where=inspection_date > '%s'" % timestamp
-    url = base_url + "?" + query.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
-    
-    try:
-        response = urllib2.urlopen(url)
-        
-        if response.code == 200:
-            all_data = json.load(response)
-            
-            tz = pytz.timezone("US/Pacific")
-            for data in all_data:
-                if 'inspection_result' in data: # Test that it's a valid record before processing
-                    try:
-                        # Only interested in failed inspections in Seattle
-                        if data['inspection_result'] == 'Unsatisfactory' and data['city'].lower() == 'seattle':
-                            point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
-                            
-                            # Date case created
-                            initial_date = datetime.datetime.strptime(data['inspection_date'], "%Y-%m-%dT%H:%M:%S")
-                            updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
-                            date = updated_date
-                            
-                            violation_code = data['violation_description'][0:4]
-                            violation_description = data['violation_description'][7:len(data['violation_description'])]
-                            
-                            category = ViolationCategory.objects.get(category='FOOD INSPECTION')
-                            
-                            # Use get_or_create so that we never risk creating the same incident twice
-                            violation_obj, created = FoodViolation.objects.get_or_create(
-                                                                violation_record_num=data['violation_record_id'],
-                                                                defaults={
-                                                                    'name':data['name'],
-                                                                    'program_identifier':data['program_identifier'],
-                                                                    'inspection_date':date,
-                                                                    'place_description':data['description'],
-                                                                    'address':data['address'],
-                                                                    'business_name':data['inspection_business_name'],
-                                                                    'inspection_type':data['inspection_type'],
-                                                                    'violation_type':data['violation_type'], # Red or blue. Red must be fixed right away
-                                                                    'violation_code':violation_code,
-                                                                    'violation_description':violation_description,
-                                                                    'inspection_serial_num':data['inspection_serial_num'],
-                                                                    'group':category,
-                                                                    'aggregate':category.aggregate,
-                                                                    'point':point
-                                                                })
-                            
-                    except KeyError, e:
-                        log.error("Missing key %s in food violation data so skipping :: %s" % (e, data['violation_record_id']))
-        
-        else:
-            log.error("Non-200 code on get_food_violations_data: %s" % str(response.code))
-    except urllib2.HTTPError, e:
-        log.error("Error getting food violation data: %s" % e.getcode())
-
-
-def load_historical_violations_data():
-    violations = open(os.path.dirname(__file__) + "/historical/Code_Violation_Cases.csv")
-    
-    reader = csv.reader(violations, delimiter=',', quotechar='"')
-    
-    new_record = 0
-    
-    counter = 0
-    for line in reader:
-        if counter != 0:
-            initial_date = datetime.datetime.strptime(line[5], "%m/%d/%Y")
-            updated_date = tz.localize(initial_date)
-            date = updated_date
-            
-            if date >= CUTOFF_DATE and line[10] and line[11]: # Skip if missing lat/longs
-                try:
-                    point = fromstr("POINT(%s %s)" % (line[11], line[10]))
-                    
-                    # Date last inspection. Not included with every violation
-                    if line[6]:
-                        initial_date = datetime.datetime.strptime(line[6], "%m/%d/%Y")
-                        updated_date = tz.localize(initial_date)
-                        last_inspection_date = updated_date
-                        inspection_result = line[7]
-                    else:
-                        last_inspection_date = None
-                        inspection_result = ''
-                        
-                        
-                    if line[4]: # For some reason, some records don't get a case_group
-                        case_group = line[4]
-                        
-                        if line[4] in VIOLATION_MAPPING:
-                            category = VIOLATION_MAPPING[line[4]]
-                        else:
-                            category = 'Other'
-                    else:
-                        case_group = 'Other'
-                        category = 'Other'
-                        
-                    # Use get_or_create so that we never risk creating the same incident twice
-                    violation_obj, created = Violation.objects.get_or_create(
-                                                        case_number=line[0],
-                                                        defaults={
-                                                            'case_type':line[1],
-                                                            'address':line[2],
-                                                            'description':line[3],
-                                                            'case_group':case_group,
-                                                            'category':category,
-                                                            'date_case_created':date,
-                                                            'date_last_inspection':last_inspection_date,
-                                                            'last_inspection_result':inspection_result,
-                                                            'status':line[8],
-                                                            'url':line[9],
-                                                            'point':point
-                                                        })
-                    if created:
-                        new_record += 1
-                except GEOSException, e:
-                    log.error("Geo Error %s importing historical violation record with permit number %s" % (e, line[0])) # Means no lat/lng
-                    
-        if counter % 1000 == 0:
-            log.info("Processed %d records. %s" % (counter, datetime.datetime.now().strftime("%H:%M:%S")))
-            
-        counter += 1
-        
-    log.info("Created %d new violation records. %s" % (new_record, datetime.datetime.now().strftime("%H:%M:%S")))
-    
-    violations.close()
 
 
 def load_historical_food_violations_data():
@@ -912,12 +736,11 @@ def load_historical_food_violations_data():
     for line in reader:
         if counter != 0:
             initial_date = datetime.datetime.strptime(line[2], "%m/%d/%Y")
-            updated_date = tz.localize(initial_date)
-            date = updated_date
+            date = initial_date.date()
             
             # King County - will include non-Seattle locations
             # Skip if no lat/longs
-            if date >= CUTOFF_DATE and line[5].lower() == 'seattle' and line[8] and line[9]:
+            if date >= CUTOFF_DATE.date() and line[5].lower() == 'seattle' and line[8] and line[9]:
                 try:
                     point = fromstr("POINT(%s %s)" % (line[8], line[9]))
                     
@@ -927,19 +750,14 @@ def load_historical_food_violations_data():
                     # Use get_or_create so that we never risk creating the same incident twice
                     # This is critical as when I tried downloading the data from King County, some identical records appeared multiple times
                     violation_obj, created = FoodViolation.objects.get_or_create(
-                                                        violation_record_num=line[20],
+                                                        violation_num=line[20],
                                                         defaults={
-                                                            'name':line[0],
-                                                            'program_identifier':line[1],
                                                             'inspection_date':date,
-                                                            'place_description':line[3],
                                                             'address':line[4],
-                                                            'business_name':line[10],
-                                                            'inspection_type':line[11],
+                                                            'name':line[10],
                                                             'violation_type':line[15], # Red or blue. Red must be fixed right away
-                                                            'violation_code':violation_code,
-                                                            'violation_description':violation_description,
-                                                            'inspection_serial_num':line[19],
+                                                            'code':violation_code,
+                                                            'description':violation_description,
                                                             'point':point
                                                         })
                     
@@ -958,11 +776,99 @@ def load_historical_food_violations_data():
     violations.close()
 
 
+def get_food_violations_data():
+    # Loads data of King County food establishment inspection cases
+    # 
+    # JSON response should be of form:
+    # {
+    # "inspection_result" : "Unsatisfactory",
+    #  "phone" : "(206) 947-1460",
+    #  "inspection_business_name" : "@ The PEAK",
+    #  "zip_code" : "98122",
+    #  "inspection_score" : "25",
+    #  "inspection_type" : "Routine Inspection/Field Review",
+    #  "violation_description" : "3400 - Wiping cloths properly used, stored",
+    #  "violation_record_id" : "IV6475303",
+    #  "inspection_closed_business" : false,
+    #  "city" : "SEATTLE",
+    #  "violation_type" : "blue",
+    #  "inspection_date" : "2013-01-25T00:00:00", << ACTUALLY A DATESTAMP, NOT A TIMESTAMP
+    #  "inspection_serial_num" : "DA2409066",
+    #  "address" : "401 BROADWAY ",
+    #  "description" : "Seating 13-50 - Risk Category III",
+    #  "name" : "@ The PEAK",
+    #  "business_id" : "PR0071429",
+    #  "longitude" : "-122.3211984964",
+    #  "latitude" : "47.6056239308",
+    #  "program_identifier" : "@ The PEAK",
+    #  "violation_points" : "5"
+    # }
+    
+    base_url = "http://www.datakc.org/resource/f29f-zza5.json"
+    
+    if FoodViolation.objects.count() == 0:
+        datestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
+    else:
+        latest = FoodViolation.objects.latest('inspection_date')
+        datestamp = latest.inspection_date.strftime("%F %H:%M:%S")
+    
+    query = "$where=inspection_date > '%s'" % datestamp
+    url = base_url + "?" + query.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
+    
+    try:
+        response = urllib2.urlopen(url)
+        
+        if response.code == 200:
+            all_data = json.load(response)
+            
+            for data in all_data:
+                if 'inspection_result' in data: # Test that it's a valid record before processing
+                    try:
+                        # Only interested in failed inspections in Seattle
+                        if data['inspection_result'] == 'Unsatisfactory' and data['city'].lower() == 'seattle':
+                            point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
+                            
+                            # Date case created
+                            initial_date = datetime.datetime.strptime(data['inspection_date'], "%Y-%m-%dT%H:%M:%S")
+                            date = initial_date.date()
+                            
+                            violation_code = data['violation_description'][0:4]
+                            violation_description = data['violation_description'][7:len(data['violation_description'])]
+                            
+                            # Use get_or_create so that we never risk creating the same incident twice
+                            violation_obj, created = FoodViolation.objects.get_or_create(
+                                                                violation_num=data['violation_record_id'],
+                                                                defaults={
+                                                                    'name':data['inspection_business_name'],
+                                                                    'inspection_date':date,
+                                                                    'address':data['address'],
+                                                                    'violation_type':data['violation_type'], # Red or blue. Red must be fixed right away
+                                                                    'code':violation_code,
+                                                                    'description':violation_description,
+                                                                    'point':point
+                                                                })
+                            
+                    except KeyError, e:
+                        if 'violation_record_id' in data:
+                            log.error("Missing key %s in food violation data so skipping :: Violation Number: %s" % (e, data['violation_record_id']))
+                        elif 'inspection_serial_num' in data:
+                            log.error("Missing key %s in food violation data so skipping :: Inspection Serial Number: %s" % (e, data['inspection_serial_num']))
+                        else:
+                            log.error("Missing key %s in food violatio data so skipping" % e)
+                        
+        
+        else:
+            log.error("Non-200 code on get_food_violations_data: %s" % str(response.code))
+    except urllib2.HTTPError, e:
+        log.error("Error getting food violation data: %s" % e.getcode())
+    
+
+
 #################################
 #
 # Police
 #
-def create_police_detail_objects():
+def create_police_aggregates():
     traffic, status = PoliceEventAggregateGroup.objects.get_or_create(category="Traffic")
     other, status = PoliceEventAggregateGroup.objects.get_or_create(category="Other")
     arrest, status = PoliceEventAggregateGroup.objects.get_or_create(category="Arrest")
@@ -1072,12 +978,102 @@ def create_police_detail_objects():
     
 
 
-def get_police_data():
-    # Loads data of Seattle 911 police incidents and incident reports
-    # 
-    # Two separate calls, one for 911 and one for reports
-    #
-    # JSON response for 911 should be of form:
+def load_historical_police_911_calls():
+    police_911 = open(os.path.dirname(__file__) + "/historical/Seattle_Police_Department_911_Incident_Response.csv")
+    
+    reader = csv.reader(police_911, delimiter=',', quotechar='"')
+    
+    log.info("Starting historical police 911 reports")
+    
+    new_record = 0
+    
+    counter = 0
+    for line in reader:
+        if counter != 0:
+            initial_date = datetime.datetime.strptime(line[7], "%m/%d/%Y %H:%M:%S %p") # sample: 05/14/2013 10:20:00 AM
+            updated_date = tz.localize(initial_date)
+            date = updated_date
+            
+            if date >= CUTOFF_DATE:
+                try:
+                    point = fromstr("POINT(%s %s)" % (line[12], line[13]))
+                    group, status = PoliceEventGroup.objects.get_or_create(description=line[6].strip())
+                    
+                    # Use get_or_create so that we never risk creating the same incident twice
+                    police_obj, created = Police911Call.objects.get_or_create(
+                                                general_offense_number=line[2],
+                                                defaults={
+                                                    'description':line[4].strip(),
+                                                    'group':group,
+                                                    'address':line[8],
+                                                    'date':date,
+                                                    'point':point
+                                                })
+                    
+                    if created:
+                        new_record += 1
+                    
+                except GEOSException, e:
+                    log.error("Geo Error %s importing historical police 911 call with general offense num %s" % (e, line[2])) # Means no lat/lng
+        
+        if counter % 1000 == 0:
+            log.info("Processed %d records. %s" % (counter, datetime.datetime.now().strftime("%H:%M:%S")))
+        
+        counter += 1
+    
+    log.info("Created %d new police 911 call records. %s" % (new_record, datetime.datetime.now().strftime("%H:%M:%S")))
+    
+    police_911.close()
+
+def load_historical_police_incidents():
+    incidents = open(os.path.dirname(__file__) + "/historical/Seattle_Police_Department_Police_Report_Incident.csv")
+    
+    reader = csv.reader(incidents, delimiter=',', quotechar='"')
+    
+    new_record = 0
+    
+    log.info("Starting historical police incident reports")
+    
+    counter = 0
+    for line in reader:
+        if counter != 0:
+            initial_date = datetime.datetime.strptime(line[7], "%m/%d/%Y %H:%M:%S %p") # sample: 05/14/2013 10:20:00 AM
+            updated_date = tz.localize(initial_date)
+            date = updated_date
+            
+            if date >= CUTOFF_DATE:
+                try:
+                    point = fromstr("POINT(%s %s)" % (line[14], line[15]))
+                    group, status = PoliceEventGroup.objects.get_or_create(description=line[6].strip())
+                    
+                    # Use get_or_create so that we never risk creating the same incident twice
+                    police_obj, created = Police911Incident.objects.get_or_create(
+                                                general_offense_number=line[1],
+                                                defaults={
+                                                    'description':line[4].strip(),
+                                                    'group':group,
+                                                    'address':line[10],
+                                                    'date':date,
+                                                    'point':point
+                                                })
+                    
+                    if created:
+                        new_record += 1
+                except GEOSException, e:
+                    log.error("Geo Error %s importing historical police incident record with general offense num %s" % (e, line[1])) # Means no lat/lng
+        
+        if counter % 1000 == 0:
+            log.info("Processed %d records. %s" % (counter, datetime.datetime.now().strftime("%H:%M:%S")))
+        
+        counter += 1
+    
+    log.info("Created %d new police incident records. %s" % (new_record, datetime.datetime.now().strftime("%H:%M:%S")))
+    
+    incidents.close()
+
+def get_911_calls():
+    # Loads data of Seattle 911 police calss
+    # JSON response for 911 calls should be of form:
     # {
     # "event_clearance_code" : "246",
     #  "cad_event_number" : "13000151256",
@@ -1099,7 +1095,54 @@ def get_police_data():
     #  "latitude" : "47.696933157",
     #  "census_tract" : "1700.7010"
     # }
-    #
+    
+    base_url = "http://data.seattle.gov/resource/3k2p-39jp.json"
+    
+    if Police911Call.objects.count() == 0:
+        timestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
+    else:
+        latest = Police911Call.objects.latest('date')
+        timestamp = latest.date.astimezone(tz).strftime("%F %H:%M:%S")
+    
+    query = "$where=event_clearance_date > '%s'" % timestamp
+    url = base_url + "?" + query.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
+    
+    try:
+        response = urllib2.urlopen(url)
+        
+        if response.code == 200:
+            all_data = json.load(response)
+            
+            for data in all_data:
+                if 'event_clearance_date' in data: # Ignore records with no descriptions (Are these hang-ups?)
+                    try:
+                        point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
+                        group, status = PoliceEventGroup.objects.get_or_create(description=data['event_clearance_group'].strip())
+                        initial_date = datetime.datetime.strptime(data['event_clearance_date'], "%Y-%m-%dT%H:%M:%S")
+                        updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
+                        date = updated_date
+                        
+                        # Use get_or_create so that we never risk creating the same incident twice
+                        police_obj, created = Police911Call.objects.get_or_create(
+                                                    general_offense_number=data['general_offense_number'],
+                                                    defaults={
+                                                        'description':data['event_clearance_description'].strip(),
+                                                        'group':group,
+                                                        'address':data['hundred_block_location'],
+                                                        'date':date,
+                                                        'point':point
+                                                    })
+                        
+                    except KeyError, e:
+                        log.error("Missing key %s in police 911 data so skipping :: %s" % (e, data['general_offense_number']))
+        else:
+            log.error("Non-200 code on get_police_data, 911 info: %s" % str(response.code))
+    except urllib2.HTTPError, e:
+        log.error("Error getting police data, 911 info: %s" % e.getcode())
+    
+
+
+def get_911_incidents():
     # JSON response for incident reports should be of form:
     # {
     #  "offense_code" : "2202",
@@ -1125,93 +1168,20 @@ def get_police_data():
     #  "occurred_date_or_date_range_start" : "2013-05-05T22:18:00"
     #}
     
-    base_url_911 = "http://data.seattle.gov/resource/3k2p-39jp.json"
-    base_url_incident = "http://data.seattle.gov/resource/7ais-f98f.json"
+    base_url = "http://data.seattle.gov/resource/7ais-f98f.json"
     
-    tz = pytz.timezone('US/Pacific')
-    
-    if Police.objects.count() == 0:
-        timestamp_911 = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
-        timestamp_incident = timestamp_911
+    if Police911Incident.objects.count() == 0:
+        timestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
     else:
-        latest_911 = Police.objects.exclude(event_clearance_date__isnull=True).order_by('-event_clearance_date')[0]
-        timestamp_911 = latest_911.event_clearance_date.astimezone(tz).strftime("%F %H:%M:%S")
-        
-        latest_incident = Police.objects.exclude(date_reported__isnull=True).order_by('-date_reported')[0]
-        timestamp_incident = latest_incident.date_reported.astimezone(tz).strftime("%F %H:%M:%S")
-        
-    query_911 = "$where=event_clearance_date > '%s'" % timestamp_911
-    url_911 = base_url_911 + "?" + query_911.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
+        latest = Police911Incident.objects.latest('date')
+        timestamp = latest.date.astimezone(tz).strftime("%F %H:%M:%S")
     
-    query_incident = "$where=date_reported > '%s'" % timestamp_incident
-    url_incident = base_url_incident + "?" + query_incident.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
-    
-    # 911
-    try:
-        response = urllib2.urlopen(url_911)
-        
-        if response.code == 200:
-            all_data = json.load(response)
-            
-            for data in all_data:
-                if 'event_clearance_date' in data: # Ignore records with no descriptions (Are these hang-ups?)
-                    try:
-                        point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
-                        hundred_block, status = HundredBlockSection.objects.get_or_create(block=data['hundred_block_location'])
-                        
-                        # Use get_or_create so that we never risk creating the same incident twice
-                        police_obj, created = Police.objects.get_or_create(
-                                                    general_offense_number=data['general_offense_number'],
-                                                    defaults={
-                                                        'hundred_block':hundred_block,
-                                                        'point':point
-                                                    })
-                        
-                        # Date case created
-                        initial_date = datetime.datetime.strptime(data['event_clearance_date'], "%Y-%m-%dT%H:%M:%S")
-                        updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
-                        date = updated_date
-                        
-                        # Update and save all attributes
-                        clearance_code, status = ClearanceCode.objects.get_or_create(code=data['event_clearance_code'])
-                        clearance_description, status = PoliceEventDetail.objects.get_or_create(description=data['event_clearance_description'].strip(), # Strip as one entry has trailing space
-                                                                defaults={
-                                                                    'source_911':True,
-                                                                })
-                        clearance_group, status = PoliceEventGroup.objects.get_or_create(description=data['event_clearance_group'].strip(),
-                                                        defaults={
-                                                            'source_911':True,
-                                                        })
-                        
-                        # Update and save all attributes
-                        police_obj.cad_cdw_id = data['cad_cdw_id']
-                        police_obj.cad_event_number = data['cad_event_number']
-                        police_obj.clearance_code = clearance_code
-                        police_obj.clearance_description = clearance_description
-                        police_obj.clearance_group = clearance_group
-                        police_obj.event_clearance_date = date
-                        
-                        if 'district_sector' in data:
-                            sector, status = DistrictSector.objects.get_or_create(district=data['district_sector'])
-                            police_obj.district = sector
-                        if 'zone_beat' in data:
-                            beat, status = ZoneBeat.objects.get_or_create(beat=data['zone_beat'])
-                            police_obj.beat = beat
-                        if 'census_tract' in data:
-                            tract, status = CensusTract.objects.get_or_create(tract=data['census_tract'])
-                            police_obj.census = tract
-                        
-                        police_obj.save()
-                    except KeyError, e:
-                        log.error("Missing key %s in police 911 data so skipping :: %s" % (e, data['general_offense_number']))
-        else:
-            log.error("Non-200 code on get_police_data, 911 info: %s" % str(response.code))
-    except urllib2.HTTPError, e:
-        log.error("Error getting police data, 911 info: %s" % e.getcode())
+    query = "$where=date_reported > '%s'" % timestamp
+    url = base_url + "?" + query.replace(" ", "%20").replace("$", "%24").replace(">", "%3E")
     
     # Police Incidents
     try:
-        response = urllib2.urlopen(url_incident)
+        response = urllib2.urlopen(url)
         
         if response.code == 200:
             all_data = json.load(response)
@@ -1220,257 +1190,29 @@ def get_police_data():
                 if 'offense_type' in data: # Check valid record
                     try:
                         point = fromstr("POINT(%s %s)" % (data['longitude'], data['latitude']))
-                        
+                        group, status = PoliceEventGroup.objects.get_or_create(description=data['summarized_offense_description'].strip())
                         # Date case created
                         initial_date = datetime.datetime.strptime(data['date_reported'], "%Y-%m-%dT%H:%M:%S")
                         updated_date = tz.localize(initial_date) # Make sure to use localize() and not replace()
                         date = updated_date
                         
-                        hundred_block, status = HundredBlockSection.objects.get_or_create(block=data['hundred_block_location'])
-                        
                         # Use get_or_create so that we never risk creating the same incident twice
-                        police_obj, created = Police.objects.get_or_create(
+                        police_obj, created = Police911Incident.objects.get_or_create(
                                                     general_offense_number=data['general_offense_number'],
                                                     defaults={
-                                                        'hundred_block':hundred_block,
+                                                        'description':data['offense_type'].strip(),
+                                                        'group':group,
+                                                        'address':data['hundred_block_location'],
+                                                        'date':date,
                                                         'point':point
                                                     })
                         
-                        # Update and save all attributes
-                        code, status = PoliceOffenseCode.objects.get_or_create(code=data['offense_code'])
-                        code_extension, status = PoliceOffenseCodeExtension.objects.get_or_create(code=data['offense_code_extension'])
-                        description, status = PoliceEventDetail.objects.get_or_create(description=data['offense_type'].strip(),
-                                                                defaults={
-                                                                    'source_911':False,
-                                                                })
-                        code_summary, status = PoliceSummaryOffenseCode.objects.get_or_create(code=data['summary_offense_code'])
-                        summary_group, status = PoliceEventGroup.objects.get_or_create(description=data['summarized_offense_description'].strip(),
-                                                        defaults={
-                                                            'source_911':False,
-                                                        })
-                        
-                        police_obj.rms_cdw_id = data['rms_cdw_id']
-                        police_obj.code = code
-                        police_obj.code_extension = code_extension
-                        police_obj.offense_detail = description
-                        police_obj.offense_code_summary = code_summary
-                        police_obj.offense_summary = summary_group
-                        police_obj.date_reported = date
-                        
-                        if 'district_sector' in data:
-                            sector, status = DistrictSector.objects.get_or_create(district=data['district_sector'])
-                            police_obj.district = sector
-                        if 'zone_beat' in data:
-                            beat, status = ZoneBeat.objects.get_or_create(beat=data['zone_beat'])
-                            police_obj.beat = beat
-                        if 'census_tract_2000' in data:
-                            tract, status = CensusTract.objects.get_or_create(tract=data['census_tract_2000'])
-                            police_obj.census = tract
-                        
-                        police_obj.save()                        
                     except KeyError, e:
                         log.error("Missing key %s in police incident data so skipping :: %s" % (e, data['general_offense_number']))
         else:
-            log.error("Non-200 code on get_police_data, incident info: %s" % str(response.code))
+            log.error("Non-200 code on getting police incident info: %s" % str(response.code))
+        
     except urllib2.HTTPError, e:
-        log.error("Error getting police data, incident info: %s" % e.getcode())
-
-
-def load_historical_police_data(scope='everything'):
-    
-    if scope == 'everything':
-        load_911 = True
-        load_incidents = True
-    elif scope == '911':
-        load_911 = True
-        load_incidents = False
-    elif scope == 'incidents':
-        load_911 = False
-        load_incidents = True
-    else:
-        load_911 = False
-        load_incidents = False
-    
-    # 911 reports
-    if load_911:
-        police_911 = open(os.path.dirname(__file__) + "/historical/Seattle_Police_Department_911_Incident_Response.csv")
-        
-        reader = csv.reader(police_911, delimiter=',', quotechar='"')
-        
-        new_record = 0
-        
-        log.info("Starting historical police 911 reports")
-        
-        counter = 0
-        for line in reader:
-            if counter != 0:
-                initial_date = datetime.datetime.strptime(line[7], "%m/%d/%Y %H:%M:%S %p") # sample: 05/14/2013 10:20:00 AM
-                updated_date = tz.localize(initial_date)
-                date = updated_date
-                
-                if date >= CUTOFF_DATE:
-                    try:
-                        point = fromstr("POINT(%s %s)" % (line[12], line[13]))
-                        hundred_block, status = HundredBlockSection.objects.get_or_create(block=line[8])
-                        
-                        # Use get_or_create so that we never risk creating the same incident twice
-                        police_obj, created = Police.objects.get_or_create(
-                                                    general_offense_number=line[2],
-                                                    defaults={
-                                                        'hundred_block':hundred_block,
-                                                        'point':point
-                                                    })
-                        
-                        # Update and save all attributes
-                        clearance_code, status = ClearanceCode.objects.get_or_create(code=line[3])
-                        clearance_description, status = PoliceEventDetail.objects.get_or_create(description=line[4].strip(),
-                                                                defaults={
-                                                                    'source_911':True,
-                                                                })
-                        clearance_group, status = PoliceEventGroup.objects.get_or_create(description=line[6].strip(),
-                                                        defaults={
-                                                            'source_911':True,
-                                                        })
-                        
-                        police_obj.cad_cdw_id = line[0]
-                        police_obj.cad_event_number = line[1]
-                        police_obj.clearance_code = clearance_code
-                        police_obj.clearance_description = clearance_description
-                        police_obj.clearance_group = clearance_group
-                        police_obj.event_clearance_date = date
-                        
-                        if line[9]:
-                            sector, status = DistrictSector.objects.get_or_create(district=line[9])
-                            police_obj.district = sector
-                        if line[10]:
-                            beat, status = ZoneBeat.objects.get_or_create(beat=line[10])
-                            police_obj.beat = beat
-                        if line[11]:
-                            tract, status = CensusTract.objects.get_or_create(tract=line[11])
-                            police_obj.census = tract
-                        
-                        police_obj.save()
-                        
-                        if created:
-                            new_record += 1
-                    except GEOSException, e:
-                        log.error("Geo Error %s importing historical police 911 record with general offense num %s" % (e, line[2])) # Means no lat/lng
-            
-            if counter % 1000 == 0:
-                log.info("Processed %d records. %s" % (counter, datetime.datetime.now().strftime("%H:%M:%S")))
-            
-            counter += 1
-        
-        log.info("Created %d new police 911 records. %s" % (new_record, datetime.datetime.now().strftime("%H:%M:%S")))
-        
-        police_911.close()
-    
-    # Incident reports
-    if load_incidents:
-        incidents = open(os.path.dirname(__file__) + "/historical/Seattle_Police_Department_Police_Report_Incident.csv")
-        
-        reader = csv.reader(incidents, delimiter=',', quotechar='"')
-        
-        new_record = 0
-        
-        log.info("Starting historical police incident reports")
-        
-        counter = 0
-        for line in reader:
-            if counter != 0:
-                initial_date = datetime.datetime.strptime(line[7], "%m/%d/%Y %H:%M:%S %p") # sample: 05/14/2013 10:20:00 AM
-                updated_date = tz.localize(initial_date)
-                date = updated_date
-                
-                if date >= CUTOFF_DATE:
-                    try:
-                        point = fromstr("POINT(%s %s)" % (line[14], line[15]))
-                        hundred_block, status = HundredBlockSection.objects.get_or_create(block=line[10])
-                        
-                        # Use get_or_create so that we never risk creating the same incident twice
-                        police_obj, created = Police.objects.get_or_create(
-                                                    general_offense_number=line[1],
-                                                    defaults={
-                                                        'hundred_block':hundred_block,
-                                                        'point':point
-                                                    })
-                        
-                        # Update and save all attributes
-                        code, status = PoliceOffenseCode.objects.get_or_create(code=line[2])
-                        code_extension, status = PoliceOffenseCodeExtension.objects.get_or_create(code=line[3])
-                        description, status = PoliceEventDetail.objects.get_or_create(description=line[4].strip(),
-                                                                defaults={
-                                                                    'source_911':False,
-                                                                })
-                        code_summary, status = PoliceSummaryOffenseCode.objects.get_or_create(code=line[5])
-                        summary_group, status = PoliceEventGroup.objects.get_or_create(description=line[6].strip(),
-                                                        defaults={
-                                                            'source_911':False,
-                                                        })
-                        
-                        
-                        police_obj.rms_cdw_id = line[0]
-                        police_obj.code = code
-                        police_obj.code_extension = code_extension
-                        police_obj.offense_detail = description
-                        police_obj.offense_code_summary = code_summary
-                        police_obj.offense_summary = summary_group
-                        police_obj.date_reported = date
-                        
-                        if line[11]:
-                            sector, status = DistrictSector.objects.get_or_create(district=line[11])
-                            police_obj.district = sector
-                        if line[12]:
-                            beat, status = ZoneBeat.objects.get_or_create(beat=line[12])
-                            police_obj.beat = beat
-                        if line[13]:
-                            tract, status = CensusTract.objects.get_or_create(tract=line[13])
-                            police_obj.census = tract
-                        
-                        police_obj.save()
-                        
-                        if created:
-                            new_record += 1
-                    except GEOSException, e:
-                        log.error("Geo Error %s importing historical police incident record with general offense num %s" % (e, line[1])) # Means no lat/lng
-            
-            if counter % 1000 == 0:
-                log.info("Processed %d records. %s" % (counter, datetime.datetime.now().strftime("%H:%M:%S")))
-            
-            counter += 1
-        
-        log.info("Created %d new police incident records. %s" % (new_record, datetime.datetime.now().strftime("%H:%M:%S")))
-        
-        incidents.close()
+        log.error("Error getting police incident data: %s" % e.getcode())
     
 
-
-def max_length_finder(file_name):
-    # Quick way to figure out maximum length of fields in a CSV. Helps avoid DatabaseError: value too long for type character varying(XX)
-    # Pass path e.g., "/historical/Seattle_Police_Department_911_Incident_Response.csv"
-    maxes = {}
-    
-    csv_file = open(os.path.dirname(__file__) + file_name)
-    
-    reader = csv.reader(csv_file, delimiter=',', quotechar='"')
-    
-    new_record = 0
-    
-    counter = 0
-    for line in reader:
-        for entry in range(0,len(line)):
-            if counter == 0:
-                maxes[entry] = {
-                    'slug':line[entry],
-                    'max_length':0
-                }
-            else:
-                if len(line[entry]) > maxes[entry]['max_length']:
-                    maxes[entry]['max_length'] = len(line[entry])
-            
-        
-        counter += 1
-    
-    for entry in maxes:
-        print maxes[entry]
-    

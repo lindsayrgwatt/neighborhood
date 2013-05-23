@@ -8,24 +8,58 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'FoodViolation'
-        db.create_table('data_foodviolation', (
+        # Adding model 'PoliceEventAggregateGroup'
+        db.create_table('data_policeeventaggregategroup', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('inspection_date', self.gf('django.db.models.fields.DateField')(db_index=True)),
-            ('address', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('group', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data.ViolationCategory'])),
-            ('code', self.gf('django.db.models.fields.CharField')(max_length=4)),
-            ('description', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('violation_num', self.gf('django.db.models.fields.CharField')(max_length=10)),
+            ('category', self.gf('django.db.models.fields.CharField')(unique=True, max_length=32)),
+        ))
+        db.send_create_signal('data', ['PoliceEventAggregateGroup'])
+
+        # Adding model 'Police911Incident'
+        db.create_table('data_police911incident', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('general_offense_number', self.gf('django.db.models.fields.BigIntegerField')(unique=True)),
+            ('description', self.gf('django.db.models.fields.CharField')(max_length=75)),
+            ('group', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data.PoliceEventGroup'])),
+            ('date', self.gf('django.db.models.fields.DateTimeField')()),
+            ('address', self.gf('django.db.models.fields.CharField')(max_length=75)),
             ('point', self.gf('django.contrib.gis.db.models.fields.PointField')()),
         ))
-        db.send_create_signal('data', ['FoodViolation'])
+        db.send_create_signal('data', ['Police911Incident'])
+
+        # Adding model 'Police911Call'
+        db.create_table('data_police911call', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('general_offense_number', self.gf('django.db.models.fields.BigIntegerField')(unique=True)),
+            ('description', self.gf('django.db.models.fields.CharField')(max_length=75)),
+            ('group', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data.PoliceEventGroup'])),
+            ('date', self.gf('django.db.models.fields.DateTimeField')()),
+            ('address', self.gf('django.db.models.fields.CharField')(max_length=75)),
+            ('point', self.gf('django.contrib.gis.db.models.fields.PointField')()),
+        ))
+        db.send_create_signal('data', ['Police911Call'])
+
+        # Adding model 'PoliceEventGroup'
+        db.create_table('data_policeeventgroup', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('description', self.gf('django.db.models.fields.CharField')(unique=True, max_length=40)),
+            ('category', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data.PoliceEventAggregateGroup'])),
+        ))
+        db.send_create_signal('data', ['PoliceEventGroup'])
 
 
     def backwards(self, orm):
-        # Deleting model 'FoodViolation'
-        db.delete_table('data_foodviolation')
+        # Deleting model 'PoliceEventAggregateGroup'
+        db.delete_table('data_policeeventaggregategroup')
+
+        # Deleting model 'Police911Incident'
+        db.delete_table('data_police911incident')
+
+        # Deleting model 'Police911Call'
+        db.delete_table('data_police911call')
+
+        # Deleting model 'PoliceEventGroup'
+        db.delete_table('data_policeeventgroup')
 
 
     models = {
@@ -72,7 +106,8 @@ class Migration(SchemaMigration):
             'inspection_date': ('django.db.models.fields.DateField', [], {'db_index': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'point': ('django.contrib.gis.db.models.fields.PointField', [], {}),
-            'violation_num': ('django.db.models.fields.CharField', [], {'max_length': '10'})
+            'violation_num': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '10'}),
+            'violation_type': ('django.db.models.fields.CharField', [], {'max_length': '4'})
         },
         'data.landpermit': {
             'Meta': {'ordering': "['-application_date', '-permit_number']", 'object_name': 'LandPermit'},
@@ -91,6 +126,37 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'label': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
             'value': ('django.db.models.fields.IntegerField', [], {'unique': 'True'})
+        },
+        'data.police911call': {
+            'Meta': {'ordering': "['-general_offense_number', '-date']", 'object_name': 'Police911Call'},
+            'address': ('django.db.models.fields.CharField', [], {'max_length': '75'}),
+            'date': ('django.db.models.fields.DateTimeField', [], {}),
+            'description': ('django.db.models.fields.CharField', [], {'max_length': '75'}),
+            'general_offense_number': ('django.db.models.fields.BigIntegerField', [], {'unique': 'True'}),
+            'group': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data.PoliceEventGroup']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'point': ('django.contrib.gis.db.models.fields.PointField', [], {})
+        },
+        'data.police911incident': {
+            'Meta': {'ordering': "['-general_offense_number', '-date']", 'object_name': 'Police911Incident'},
+            'address': ('django.db.models.fields.CharField', [], {'max_length': '75'}),
+            'date': ('django.db.models.fields.DateTimeField', [], {}),
+            'description': ('django.db.models.fields.CharField', [], {'max_length': '75'}),
+            'general_offense_number': ('django.db.models.fields.BigIntegerField', [], {'unique': 'True'}),
+            'group': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data.PoliceEventGroup']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'point': ('django.contrib.gis.db.models.fields.PointField', [], {})
+        },
+        'data.policeeventaggregategroup': {
+            'Meta': {'ordering': "['category']", 'object_name': 'PoliceEventAggregateGroup'},
+            'category': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '32'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
+        },
+        'data.policeeventgroup': {
+            'Meta': {'ordering': "['description']", 'object_name': 'PoliceEventGroup'},
+            'category': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['data.PoliceEventAggregateGroup']"}),
+            'description': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '40'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
         },
         'data.violation': {
             'Meta': {'ordering': "['-case_number']", 'object_name': 'Violation'},

@@ -95,6 +95,8 @@ or
 
 `python manage.py celeryd -E -B -l info -c 1 --settings=neighborhood.settings.local`
 
+I use only 1 thread (`-c 1`) because I found that using multiple threads created duplicate data. Also beware running all the tasks at exactly the same time. I found that this caused celery to hang and use 100% CPU on one core.
+
 ## dotCloud Gotchas
 
 If you don't know anything about dotCloud, please read how to [get started with Django on dotCloud](http://docs.dotcloud.com/tutorials/python/django/) then [add geoDjango](http://docs.dotcloud.com/tutorials/python/geodjango/), a [Celery queue](http://docs.dotcloud.com/tutorials/python/django-celery/) powered by [Redis](http://docs.dotcloud.com/services/redis/). Any changes to these are noted below.

@@ -8,24 +8,13 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'FoodViolation'
-        db.create_table('data_foodviolation', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('inspection_date', self.gf('django.db.models.fields.DateField')(db_index=True)),
-            ('address', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('group', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['data.ViolationCategory'])),
-            ('code', self.gf('django.db.models.fields.CharField')(max_length=4)),
-            ('description', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('violation_num', self.gf('django.db.models.fields.CharField')(max_length=10)),
-            ('point', self.gf('django.contrib.gis.db.models.fields.PointField')()),
-        ))
-        db.send_create_signal('data', ['FoodViolation'])
+        # Adding unique constraint on 'FoodViolation', fields ['violation_num']
+        db.create_unique('data_foodviolation', ['violation_num'])
 
 
     def backwards(self, orm):
-        # Deleting model 'FoodViolation'
-        db.delete_table('data_foodviolation')
+        # Removing unique constraint on 'FoodViolation', fields ['violation_num']
+        db.delete_unique('data_foodviolation', ['violation_num'])
 
 
     models = {
@@ -72,7 +61,7 @@ class Migration(SchemaMigration):
             'inspection_date': ('django.db.models.fields.DateField', [], {'db_index': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'point': ('django.contrib.gis.db.models.fields.PointField', [], {}),
-            'violation_num': ('django.db.models.fields.CharField', [], {'max_length': '10'})
+            'violation_num': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '10'})
         },
         'data.landpermit': {
             'Meta': {'ordering': "['-application_date', '-permit_number']", 'object_name': 'LandPermit'},
