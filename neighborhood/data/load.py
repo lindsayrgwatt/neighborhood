@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import urllib
 import urllib2
 import json
@@ -294,14 +296,14 @@ def load_historical_fire_data():
 #
 def create_permit_ranges():
     ranges = {
-        '<= $1':1,
-        '<= $1,000':1000,
-        '<= $10,000':10000,
-        '<= $50,000':50000,
-        '<= $100,000':100000,
-        '<= $1,000,000':1000000,
-        '<= $10,000,000':10000000,
-        '> $10,000,000':10000001
+        '≤$1':1,
+        '≤$1K':1000,
+        '≤$10K':10000,
+        '≤$50K':50000,
+        '≤$100K':100000,
+        '≤$1M':1000000,
+        '≤$10M':10000000,
+        '>$10M':10000001
     }
     
     for entry in ranges:
@@ -1025,6 +1027,7 @@ def load_historical_police_911_calls():
     
     police_911.close()
 
+
 def load_historical_police_incidents():
     incidents = open(os.path.dirname(__file__) + "/historical/Seattle_Police_Department_Police_Report_Incident.csv")
     
@@ -1070,6 +1073,7 @@ def load_historical_police_incidents():
     log.info("Created %d new police incident records. %s" % (new_record, datetime.datetime.now().strftime("%H:%M:%S")))
     
     incidents.close()
+
 
 def get_911_calls():
     # Loads data of Seattle 911 police calss

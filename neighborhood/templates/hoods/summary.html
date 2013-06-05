@@ -1,0 +1,555 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block title %}Seattle{% endblock title %}
+
+{% block content %}
+  <div class="hero-unit">
+    <h1 class="headline headline_big">{{date_label}} in {{ neighborhood_name }}</h1>
+    <h2 class="headlind headline_small">{{date_label}} in Seattle</h2>
+  </div>  
+  <div class="row-fluid">
+    <div class="span3">
+      <div class="service_icon"><img src="{% static "img/icons/police.png" %}" class="police_icon_spacer"></div>
+      <h2 class="service_name">Police</h2>
+      <hr>
+      <p class="service_info">
+        {% if police_call_count == 0 %}
+        No <span class="highlight">911</span> calls for the police 
+        {% elif police_call_count == 1 %}
+        1 <span class="highlight">911</span> call for the police 
+        {% else %}
+        {{ police_call_count }} <span class="highlight">911</span> calls for the police 
+        {% endif %}
+        leading to
+        {% if police_incident_count == 0%}
+        zero incident reports.
+        {% elif police_incident_count == 1 %}
+        1 incident report.
+        {% else %}
+        {{ police_incident_count }} incident reports.
+        {% endif %}
+      </p>
+      <div id="police_graph" class="detail_graph"></div>
+    </div>
+    <div class="span3">
+      <div class="service_icon"><img src="{% static "img/icons/fire.png" %}"></div>
+      <h2 class="service_name">Fire</h2>
+      <hr>
+      <p class="service_info">
+        {% if fire_count == 0 %}
+        No <span class="highlight">911</span> calls for the fire department.
+        {% elif fire_count == 1 %}
+        1 <span class="highlight">911</span> call for the fire department.
+        {% else %}
+        {{ fire_count }} <span class="highlight">911</span> calls for the fire department.
+        {% endif %}
+      </p>
+      <div id="fire_detail_graph" class="detail_graph"></div>
+    </div>
+    <div class="span3">
+      <div class="service_icon"><img src="{% static "img/icons/permit.png" %}" class="permit_icon_spacer"></div>
+      <h2 class="service_name">Permits</h2>
+      <hr>
+      <p class="service_info">
+        {% if land_permit_count == 0 %}
+        No land 
+        {% elif land_permit_count == 1 %}
+        1 land 
+        {% else %}
+        {{ land_permit_count }} land 
+        {% endif %}
+        and
+        {% if building_permit_count == 0 %}
+        no building permits
+        {% elif building_permit_count == 1 %}
+        1 building permit
+        {% else %}
+        {{ building_permit_count }} building permits
+        {% endif %}
+        were issued.
+      </p>
+      {% if weekend %}
+      <p class="notice">Land and building permits are only issued on weekdays.</p>
+      {% endif %}
+      <div id="permits_detail_graph" class="detail_graph"></div>
+    </div>
+    <div class="span3">
+      <div class="service_icon"><img src="{% static "img/icons/violations.png" %}" class="violations_icon_spacer"></div>
+      <h2 class="service_name">Violations</h2>
+      <hr>
+      <p class="service_info">
+        {% if code_violations_count == 0 %}
+        No code 
+        {% else %}
+        {{ land_permit_count }} code 
+        {% endif %}
+        and
+        {% if food_violations_count == 0 %}
+        no
+        {% else %}
+        {{ food_violations_count }}
+        {% endif %}
+        food violations were issued.
+      </p>
+      {% if weekend %}
+      <p class="notice">Code and food violations are only issued on weekdays.</p>
+      {% endif %}
+      {% if food_violations_count == 0 and not weekend %}
+      <p class="notice">There can be a lag in King County reporting food violations.</p>
+      {% endif %}
+      <div id="violations_detail_graph" class="detail_graph"></div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(document).ready(function() {
+    var TOP_OFFSET = 15;
+    var LEGEND_HEIGHT = 200;
+    var GRAPH_HEIGHT = 235;
+    
+    function compare(a,b) {
+      if (a.label < b.label)
+         return -1;
+      if (a.label > b.label)
+        return 1;
+      return 0;
+    }
+    
+    {% if police_call_count > 0 or police_incident_count > 0 %}
+    var showPolice = true;
+    {% else %}
+    var showPolice = false;
+    {% endif %}
+    
+    {% if fire_count > 0 %}
+    var showFire = true;
+    {% else %}
+    var showFire = false;
+    {% endif %}
+    
+    {% if land_permit_count > 0 or building_permit_count > 0 %}
+    var showPermits = true;
+    {% else %}
+    var showPermits = false;
+    {% endif %}
+    
+    {% if violations_count > 0 %}
+    var showViolations = true;
+    {% else %}
+    var showViolations = false;
+    {% endif %}
+    
+    function drawFireGraph() {
+      var data = [{% for key, value in fire_detail.items %}{label:"{{key}}", value:{{value}}}{% if not forloop.last %},{% endif %}{% endfor %}];
+      
+      data.sort(compare);
+      
+      $('#fire_detail_graph').empty();
+      
+      var bottom = $('#fire_detail_graph').height() - LEGEND_HEIGHT;
+      
+      var x = d3.scale.ordinal()
+        .domain(data.map(function(d) {return d.label;}))
+        .rangeBands([0, $('#fire_detail_graph').width()], 0.1, 0.1);
+      
+      var xColor = d3.scale.category10();
+      
+      var y = d3.scale.linear()
+        .domain([0, d3.max(data, function(d) {return d.value})])
+        .range([TOP_OFFSET, bottom]);
+      
+      var chart = d3.select("#fire_detail_graph").append("svg")
+          .attr("class", "chart")
+          .attr("width", $('#fire_detail_graph').width())
+          .attr("height", $('#fire_detail_graph').height())
+        .append("g")
+          .attr("transform", "translate(0,"+TOP_OFFSET+")");
+      
+      chart.selectAll("line")
+          .data(y.ticks(10))
+        .enter().append("line")
+          .attr("x1", 0)
+          .attr("x2", $('#fire_detail_graph').width())
+          .attr("y1", function(d) {return bottom - y(d)})
+          .attr("y2", function(d) {return bottom - y(d)})
+          .style("stroke", "#EEEEEE");
+      
+      chart.selectAll("text")
+        .data(data)
+      .enter().append("text")
+        .attr("x", function(d,i) {return (x(i) + x.rangeBand()/2)})
+        .attr("y", function(d) { return bottom - y(d.value)})
+        .attr("dx", 0)
+        .attr("dy", -3)
+        .attr("text-anchor", "middle")
+        .text(function(d) {if (d.value == 0) { return ""} else { return d.value}});
+      
+      chart.selectAll("rect")
+        .data(data)
+      .enter().append("rect")
+        .attr("x", function(d,i) {return x(i);})
+        .attr("y", function(d) {return bottom - y(d.value);})
+        .attr("width", x.rangeBand())
+        .attr("height", function(d) {return y(d.value) - TOP_OFFSET})
+        .attr("fill", function(d, i) {return xColor(i)});
+      
+      var legend = chart.append("g")
+        .attr("class", "legend")
+        .attr("x", 10)
+        .attr("y", 10)
+        .attr("height", 100)
+        .attr("width", 100)
+      
+      legend.selectAll("rect")
+        .data(data)
+      .enter().append("rect")
+        .attr("x", 10)
+        .attr("y", function(d, i) {return bottom + i*15})
+        .attr("height", 12)
+        .attr("width", 20)
+        .style("fill", function(d, i) {return xColor(i)});
+      
+      legend.selectAll("text")
+        .data(data)
+      .enter().append("text")
+        .attr("x", 35)
+        .attr("y", function(d, i) {return bottom + i*15})
+        .attr("dy", "0.85em")
+        .text(function(d) {return d.label});
+      
+    }
+    
+    function drawPoliceGraph() {
+      var callData = [{% for key, value in police_call_detail.items %}{label:"{{key}}", value:{{value}}}{% if not forloop.last %},{% endif %}{% endfor %}];
+      var incidentData = [{% for key, value in police_incident_detail.items %}{label:"{{key}}", value:{{value}}}{% if not forloop.last %},{% endif %}{% endfor %}];
+      
+      callData.sort(compare);
+      incidentData.sort(compare);
+      
+      $('#police_graph').empty();
+      
+      var bottom = $('#police_graph').height() - LEGEND_HEIGHT;
+      
+      var x = d3.scale.ordinal()
+        .domain(callData.map(function(d) {return d.label;}))
+        .rangeBands([0, $('#police_graph').width()], 0.1, 0.1);
+      
+      var xColor = d3.scale.category20();
+      
+      var y = d3.scale.linear()
+        .domain([0, d3.max(callData, function(d) {return d.value})])
+        .range([TOP_OFFSET, bottom]);
+      
+      var chart = d3.select("#police_graph").append("svg")
+          .attr("class", "chart")
+          .attr("width", $('#police_graph').width())
+          .attr("height", $('#police_graph').height())
+        .append("g")
+          .attr("transform", "translate(0,"+TOP_OFFSET+")");
+      
+      chart.selectAll("line")
+          .data(y.ticks(10))
+        .enter().append("line")
+          .attr("x1", 0)
+          .attr("x2", $('#police_graph').width())
+          .attr("y1", function(d) {return bottom - y(d)})
+          .attr("y2", function(d) {return bottom - y(d)})
+          .style("stroke", "#EEEEEE");
+      
+      chart.selectAll("text")
+        .data(callData)
+      .enter().append("text")
+        .attr("x", function(d,i) {return (x(i) + x.rangeBand()/4)})
+        .attr("y", function(d) { return bottom - y(d.value)})
+        .attr("dx", 0)
+        .attr("dy", -3)
+        .attr("text-anchor", "middle")
+        .text(function(d) {if (d.value == 0) { return ""} else { return d.value}});
+      
+      chart.selectAll("rect")
+        .data(callData)
+      .enter().append("rect")
+        .attr("x", function(d,i) {return x(i);})
+        .attr("y", function(d) {return bottom - y(d.value);})
+        .attr("width", x.rangeBand()/2)
+        .attr("height", function(d) {return y(d.value) - TOP_OFFSET})
+        .attr("fill", function(d, i) {return xColor(i)});
+        
+      var incidents = chart.append("g")
+        .attr("class", "incidents")
+      
+      incidents.selectAll("text")
+        .data(incidentData)
+      .enter().append("text")
+        .attr("x", function(d,i) {return (x(i) + 3*x.rangeBand()/4)})
+        .attr("y", function(d) { return bottom - y(d.value)})
+        .attr("dx", 0)
+        .attr("dy", -3)
+        .attr("text-anchor", "middle")
+        .text(function(d) {if (d.value == 0) { return ""} else { return d.value}});
+
+      incidents.selectAll("rect")
+        .data(incidentData)
+      .enter().append("rect")
+        .attr("x", function(d,i) {return x(i) + x.rangeBand()/2;})
+        .attr("y", function(d) {return bottom - y(d.value);})
+        .attr("width", x.rangeBand()/2)
+        .attr("height", function(d) {return y(d.value) - TOP_OFFSET})
+        .attr("fill", function(d, i) {return xColor(i)});
+      
+      var legend = chart.append("g")
+        .attr("class", "legend")
+        .attr("x", 10)
+        .attr("y", 10)
+        .attr("height", 100)
+        .attr("width", 100)
+        
+      legend.selectAll("rect")
+        .data(callData)
+      .enter().append("rect")
+        .attr("x", 10)
+        .attr("y", function(d, i) {return bottom + i*15})
+        .attr("height", 12)
+        .attr("width", 20)
+        .style("fill", function(d, i) {return xColor(i)});
+        
+      legend.selectAll("text")
+        .data(callData)
+      .enter().append("text")
+        .attr("x", 35)
+        .attr("y", function(d, i) {return bottom + i*15})
+        .attr("dy", "0.85em")
+        .text(function(d) {return d.label});
+    
+
+    }
+    
+    function drawPermitsGraph() {
+      var data = [{% for item in permit_detail %}{label:"{{ item.label|safe}}", building:{{ item.building}}, land:{{ item.land }}}{% if not forloop.last %},{% endif %}{% endfor %}];
+      
+      var labels = [{label:'Buildings', color:'#2ca02c'},{label:'Land', color:"#ffbb78"}]
+      
+      var sumMaxY = Math.max.apply(Math,data.map(function(o){return o.building;})) + Math.max.apply(Math,data.map(function(o){return o.land;}));
+      
+      $('#permits_detail_graph').empty();
+      
+      var bottom = $('#permits_detail_graph').height() - LEGEND_HEIGHT;
+      
+      var x = d3.scale.ordinal()
+        .domain(data.map(function(d) {return d.label;}))
+        .rangeBands([0, $('#permits_detail_graph').width()], 0.1, 0.1);
+      
+      var y = d3.scale.linear()
+        .domain([0, sumMaxY])
+        .range([TOP_OFFSET, bottom]);
+      
+      var chart = d3.select("#permits_detail_graph").append("svg")
+          .attr("class", "chart")
+          .attr("width", $('#permits_detail_graph').width())
+          .attr("height", $('#permits_detail_graph').height())
+        .append("g")
+          .attr("transform", "translate(0,"+TOP_OFFSET+")");
+      
+      chart.selectAll("line")
+          .data(y.ticks(10))
+        .enter().append("line")
+          .attr("x1", 0)
+          .attr("x2", $('#permits_detail_graph').width())
+          .attr("y1", function(d) {return bottom - y(d)})
+          .attr("y2", function(d) {return bottom - y(d)})
+          .style("stroke", "#EEEEEE");
+      
+      chart.selectAll("rect")
+        .data(data)
+      .enter().append("rect")
+        .attr("x", function(d,i) {return x(i);})
+        .attr("y", function(d) {return bottom - y(d.building);})
+        .attr("width", x.rangeBand())
+        .attr("height", function(d) {return y(d.building) - TOP_OFFSET})
+        .attr("fill", labels[0].color);
+      
+      var landPermits = chart.append("g")
+        .attr("class", "land");
+      
+      landPermits.selectAll("rect")
+        .data(data)
+      .enter().append("rect")
+        .attr("x", function(d,i) {return x(i);})
+        .attr("y", function(d) {return bottom - y(d.land) - y(d.building) + TOP_OFFSET;})
+        .attr("width", x.rangeBand())
+        .attr("height", function(d) {return y(d.land) - TOP_OFFSET})
+        .attr("fill", labels[1].color);
+      
+      chart.selectAll("text")
+        .data(data)
+      .enter().append("text")
+        .attr("x", function(d,i) {return (x(i) + x.rangeBand()/2)})
+        .attr("y", function(d) { return bottom - y(d.building)})
+        .attr("dx", 0)
+        .attr("dy", -3)
+        .attr("text-anchor", "middle")
+        .text(function(d) {if (d.building == 0) { return ""} else { return d.building}});
+      
+      landPermits.selectAll("text")
+        .data(data)
+        .enter().append("text")
+          .attr("x", function(d,i) {return (x(i) + x.rangeBand()/2)})
+          .attr("y", function(d) { return bottom - y(d.land) - y(d.building) + TOP_OFFSET})
+          .attr("dx", 0)
+          .attr("dy", -3)
+          .attr("text-anchor", "middle")
+          .text(function(d) {if (d.land == 0) { return ""} else { return d.land}});
+      
+        var legend = chart.append("g")
+          .attr("class", "legend")
+          .attr("x", 10)
+          .attr("y", 10)
+          .attr("height", 100)
+          .attr("width", 100)
+        
+        legend.selectAll("rect")
+          .data(labels)
+        .enter().append("rect")
+          .attr("x", 10)
+          .attr("y", function(d, i) {return 15 + bottom + i*15})
+          .attr("height", 12)
+          .attr("width", 20)
+          .style("fill", function(d) {return d.color});
+          
+        legend.selectAll("text")
+          .data(labels)
+        .enter().append("text")
+          .attr("x", 35)
+          .attr("y", function(d, i) {return 15 + bottom + i*15})
+          .attr("dy", "0.85em")
+          .text(function(d) {return d.label});
+          
+      
+      // BAD: somewhere above doubles the size of x
+      // Redefining it here reduces it to the correct scale
+      var x = d3.scale.ordinal()
+            .domain(data.map(function(d) {return d.label;}))
+            .rangeBands([0, $('#permits_detail_graph').width()], 0.1, 0.1);
+      
+      var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+            
+      var axis = chart.append("g")
+        .attr("class", "x_axis")
+        .attr("transform", "translate(0," + (bottom - TOP_OFFSET) + ")")
+        .call(xAxis);
+    }
+    
+    function drawViolationsGraph() {
+      var data = [{% for key, value in code_violations_details.items %}{label:"{{key}}", value:{{value}}}{% if not forloop.last %},{% endif %}{% endfor %}];
+      
+      data.sort(compare);
+      
+      $('#violations_detail_graph').empty();
+      
+      var bottom = $('#violations_detail_graph').height() - LEGEND_HEIGHT;
+      
+      var x = d3.scale.ordinal()
+        .domain(data.map(function(d) {return d.label;}))
+        .rangeBands([0, $('#violations_detail_graph').width()], 0.1, 0.1);
+      
+      var xColor = d3.scale.category10();
+      
+      var y = d3.scale.linear()
+        .domain([0, d3.max(data, function(d) {return d.value})])
+        .range([TOP_OFFSET, bottom]);
+      
+      var chart = d3.select("#violations_detail_graph").append("svg")
+          .attr("class", "chart")
+          .attr("width", $('#violations_detail_graph').width())
+          .attr("height", $('#violations_detail_graph').height())
+        .append("g")
+          .attr("transform", "translate(0,"+TOP_OFFSET+")");
+      
+      chart.selectAll("line")
+          .data(y.ticks(10))
+        .enter().append("line")
+          .attr("x1", 0)
+          .attr("x2", $('#violations_detail_graph').width())
+          .attr("y1", function(d) {return bottom - y(d)})
+          .attr("y2", function(d) {return bottom - y(d)})
+          .style("stroke", "#EEEEEE");
+      
+      chart.selectAll("text")
+        .data(data)
+      .enter().append("text")
+        .attr("x", function(d,i) {return (x(i) + x.rangeBand()/2)})
+        .attr("y", function(d) { return bottom - y(d.value)})
+        .attr("dx", 0)
+        .attr("dy", -3)
+        .attr("text-anchor", "middle")
+        .text(function(d) {if (d.value == 0) { return ""} else { return d.value}});
+      
+      chart.selectAll("rect")
+        .data(data)
+      .enter().append("rect")
+        .attr("x", function(d,i) {return x(i);})
+        .attr("y", function(d) {return bottom - y(d.value);})
+        .attr("width", x.rangeBand())
+        .attr("height", function(d) {return y(d.value) - TOP_OFFSET})
+        .attr("fill", function(d, i) {return xColor(i)});
+      
+      var legend = chart.append("g")
+        .attr("class", "legend")
+        .attr("x", 10)
+        .attr("y", 10)
+        .attr("height", 100)
+        .attr("width", 100)
+      
+      legend.selectAll("rect")
+        .data(data)
+      .enter().append("rect")
+        .attr("x", 10)
+        .attr("y", function(d, i) {return bottom + i*15})
+        .attr("height", 12)
+        .attr("width", 20)
+        .style("fill", function(d, i) {return xColor(i)});
+      
+      legend.selectAll("text")
+        .data(data)
+      .enter().append("text")
+        .attr("x", 35)
+        .attr("y", function(d, i) {return bottom + i*15})
+        .attr("dy", "0.85em")
+        .text(function(d) {return d.label});
+      
+    }
+    if (showPolice) {
+      drawPoliceGraph();
+    }
+    if (showFire) {
+      drawFireGraph();
+    }
+    if (showPermits) {
+      drawPermitsGraph();
+    }
+    if (showViolations) {
+      drawViolationsGraph();
+    }
+    
+    $(window).resize(function() {
+      if (showPolice) {
+        drawPoliceGraph();
+      }
+      if (showFire) {
+        drawFireGraph();
+      }
+      if (showPermits) {
+        drawPermitsGraph();
+      }
+      if (showViolations) {
+        drawViolationsGraph();
+      }
+    });
+  });
+</script>
+{% endblock %}

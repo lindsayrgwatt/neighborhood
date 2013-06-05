@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import datetime
 import pytz
 
@@ -11,7 +13,7 @@ from data.models import PermitValue, BuildingPermit, LandPermit
 from data.models import ViolationAggregateCategory, ViolationCategory, Violation, FoodViolation
 from data.models import PoliceEventAggregateGroup, PoliceEventGroup, Police911Call, Police911Incident
 
-from hoods.views import calculate_neighborhood, calculate_date, get_details
+from hoods.views import calculate_neighborhood, calculate_date, is_weekend, get_details
 import hoods.load as neighborhood_loader
 from data.load import create_permit_ranges, create_violation_aggregates, create_police_aggregates
 
@@ -246,9 +248,9 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(ballard_objs_yesterday[0].count(), 1) # Fires
         self.assertEqual(ballard_objs_yesterday[1]['Other'], 1) # Fire count by category
         self.assertEqual(ballard_objs_yesterday[2].count(), 1) # Building permits
-        self.assertEqual(ballard_objs_yesterday[3]['<= $1,000'], 1) # Building permit counts by category
+        self.assertEqual(ballard_objs_yesterday[3][u'≤$1K'], 1) # Building permit counts by category
         self.assertEqual(ballard_objs_yesterday[4].count(), 1) # Land use permits
-        self.assertEqual(ballard_objs_yesterday[5]['<= $1,000'], 1) # Land use permit counts by category
+        self.assertEqual(ballard_objs_yesterday[5][u'≤$1K'], 1) # Land use permit counts by category
         self.assertEqual(ballard_objs_yesterday[6].count(), 1) # Code violations
         self.assertEqual(ballard_objs_yesterday[7]['Zoning'], 1) # Code violation counts by category
         self.assertEqual(ballard_objs_yesterday[7]['Food Inspection'], 1)
@@ -269,9 +271,9 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(seattle_objs_yesterday[0].count(), 2) # Fires
         self.assertEqual(seattle_objs_yesterday[1]['Other'], 2) # Fire count by category
         self.assertEqual(seattle_objs_yesterday[2].count(), 2) # Building permits
-        self.assertEqual(seattle_objs_yesterday[3]['<= $1,000'], 2) # Building permit counts by category
+        self.assertEqual(seattle_objs_yesterday[3][u'≤$1K'], 2) # Building permit counts by category
         self.assertEqual(seattle_objs_yesterday[4].count(), 2) # Land use permits
-        self.assertEqual(seattle_objs_yesterday[5]['<= $1,000'], 2) # Land use permit counts by category
+        self.assertEqual(seattle_objs_yesterday[5][u'≤$1K'], 2) # Land use permit counts by category
         self.assertEqual(seattle_objs_yesterday[6].count(), 2) # Code violations
         self.assertEqual(seattle_objs_yesterday[7]['Zoning'], 2) # Code violation counts by category
         self.assertEqual(seattle_objs_yesterday[7]['Food Inspection'], 2)
@@ -281,6 +283,7 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(seattle_objs_yesterday[11].count(), 2) # Police 911 Incidents
         self.assertEqual(seattle_objs_yesterday[12]['Homicide'], 2) # Police incident counts by category
     
+
 
 class HelperTestCase(unittest.TestCase):
     def test_date_calculation(self):
@@ -317,4 +320,22 @@ class HelperTestCase(unittest.TestCase):
         two_weeks_ago_str = two_weeks_ago.strftime("%d%m%Y")
         
         self.assertEqual(calculate_date(two_weeks_ago_str), (True, two_weeks_ago.date(), 'On ' + two_weeks_ago.strftime("%A, %B %d, %Y")))
+    
+    
+    def test_is_weekend_calculation(self):
+        monday = datetime.date(2013, 6, 3)
+        tuesday = datetime.date(2013, 6, 4)
+        wednesday = datetime.date(2013, 6, 5)
+        thursday = datetime.date(2013, 6, 6)
+        friday = datetime.date(2013, 6, 7)
+        saturday = datetime.date(2013, 6, 8)
+        sunday = datetime.date(2013, 6, 9)
+        
+        self.assertEqual(is_weekend(monday), False)
+        self.assertEqual(is_weekend(tuesday), False)
+        self.assertEqual(is_weekend(wednesday), False)
+        self.assertEqual(is_weekend(thursday), False)
+        self.assertEqual(is_weekend(friday), False)
+        self.assertEqual(is_weekend(saturday), True)
+        self.assertEqual(is_weekend(sunday), True)
     

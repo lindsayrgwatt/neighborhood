@@ -1,0 +1,67 @@
+/****************************** Detail page ********************/
+.service_name, .headline {
+    text-align: center;
+}
+
+.service_icon {
+    height: 48px;
+    text-align: center;
+}
+
+.police_icon_spacer {
+    padding-top: 6px;
+}
+
+.permit_icon_spacer {
+    padding-top: 5px;
+}
+
+.violations_icon_spacer {
+    padding-top: 10px;
+}
+
+@media screen and (max-width: 320px) {
+    .headline_big {
+        display:none;
+    }
+}
+
+@media screen and (min-width: 320px) {
+    .headline_small {
+        display:none;
+    }
+}
+
+.service_info {
+    height: 2.5em;
+    font-size: 1.2em;
+}
+
+.highlight {
+    font-style: italic;
+}
+
+.notice {
+    font-size: 0.8em;
+    font-style: italic;
+}
+
+/**** Graphs *****/
+.detail_graph {
+    height: 450px;
+    width: 100%;
+}
+
+.x_axis path,
+.x_axis line {
+    fill: none;
+    stroke: #EEEEEE;
+    shape-rendering: crispEdges;
+}
+
+.x_axis text {
+    font-size: 0.65em;
+}
+.legend text {
+    font-size: 0.8em;
+}

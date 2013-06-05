@@ -86,7 +86,7 @@ ROOT_URLCONF = 'neighborhood.urls'
 WSGI_APPLICATION = 'neighborhood.wsgi.application'
 
 TEMPLATE_DIRS = (
-    os.path.join(PROJECT_ROOT, 'neighborhood/templates/'),
+    os.path.join(BASE_DIR, 'templates/'),
 )
 
 INSTALLED_APPS = (
