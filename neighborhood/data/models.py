@@ -46,6 +46,12 @@ class Fire(models.Model):
     def __unicode__(self):
         return self.incident_number + " :: " + self.incident_category.description + " :: " + str(self.date)
     
+    def lat(self):
+        return self.point.get_coords()[1]
+    
+    def lng(self):
+        return self.point.get_coords()[0]
+    
     class Meta:
         ordering = ['-date', 'incident_category']
     
@@ -90,6 +96,7 @@ class PermitValue(models.Model):
         ordering = ['-value']
     
 
+
 class BuildingPermit(models.Model):
     permit_type = models.CharField(max_length=16)
     application_date = models.DateField(db_index=True)
@@ -106,6 +113,12 @@ class BuildingPermit(models.Model):
     def __unicode__(self):
         return self.permit_type + " :: " + str(self.permit_number) + " :: "  + str(self.application_date)
     
+    def lat(self):
+        return self.point.get_coords()[1]
+    
+    def lng(self):
+        return self.point.get_coords()[0]
+    
     def save(self, *args, **kwargs):
         self = calc_permit_value(self)
         
@@ -114,6 +127,7 @@ class BuildingPermit(models.Model):
     class Meta:
         ordering = ['-application_date', 'permit_type']
     
+
 
 class LandPermit(models.Model):
     application_date = models.DateField(db_index=True)
@@ -129,6 +143,12 @@ class LandPermit(models.Model):
     
     def __unicode__(self):
         return str(self.permit_number) + " :: " + str(self.application_date)
+    
+    def lat(self):
+        return self.point.get_coords()[1]
+    
+    def lng(self):
+        return self.point.get_coords()[0]
     
     def save(self, *args, **kwargs):
         self = calc_permit_value(self)
@@ -183,6 +203,12 @@ class Violation(models.Model):
     point = models.PointField(help_text="Represented as 'POINT(longitude, latitude)'")
     objects = models.GeoManager()
     
+    def lat(self):
+        return self.point.get_coords()[1]
+    
+    def lng(self):
+        return self.point.get_coords()[0]
+    
     def __unicode__(self):
         return self.group.category + " :: " + str(self.case_number) + " :: "  + str(self.date_case_created)
     
@@ -205,6 +231,12 @@ class FoodViolation(models.Model):
     
     def __unicode__(self):
         return self.name + " :: " + str(self.inspection_date)
+    
+    def lat(self):
+        return self.point.get_coords()[1]
+    
+    def lng(self):
+        return self.point.get_coords()[0]
     
     def save(self, *args, **kwargs):
         self.group = ViolationCategory.objects.get(category='FOOD INSPECTION')
@@ -267,9 +299,16 @@ class Police911Call(models.Model):
     def __unicode__(self):
         return str(self.general_offense_number) + " :: " + self.description + " :: "+ str(self.date)
     
+    def lat(self):
+        return self.point.get_coords()[1]
+    
+    def lng(self):
+        return self.point.get_coords()[0]
+    
     class Meta:
         ordering = ['-date', '-general_offense_number'] # Some general_offense_numbers have extra digit so 10X larger than others
     
+
 
 class Police911Incident(models.Model):
     general_offense_number = models.BigIntegerField(unique=True)
@@ -283,6 +322,13 @@ class Police911Incident(models.Model):
     
     def __unicode__(self):
         return str(self.general_offense_number) + " :: " + self.description + " :: "+ str(self.date)
+    
+    def lat(self):
+        return self.point.get_coords()[1]
+
+    def lng(self):
+        return self.point.get_coords()[0]
+
     
     class Meta:
         ordering = ['-date', '-general_offense_number']

@@ -99,6 +99,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.gis',
+    'django.contrib.humanize',
     'south',
     'djcelery',
     'crispy_forms',

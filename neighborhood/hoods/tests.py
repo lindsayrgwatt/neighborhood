@@ -202,6 +202,35 @@ class NeighborhoodTestCase(unittest.TestCase):
             self.__class__.ClassIsSetup = True
         
     
+    def test_lat_lng_getters_work(self):
+        police_call = Police911Call.objects.all()[0]
+        self.assertEqual(police_call.lat(), police_call.point.get_coords()[1])
+        self.assertEqual(police_call.lng(), police_call.point.get_coords()[0])
+        
+        police_incident = Police911Incident.objects.all()[0]
+        self.assertEqual(police_incident.lat(), police_call.point.get_coords()[1])
+        self.assertEqual(police_incident.lng(), police_call.point.get_coords()[0])
+        
+        fire = Fire.objects.all()[0]
+        self.assertEqual(fire.lat(), fire.point.get_coords()[1])
+        self.assertEqual(fire.lng(), fire.point.get_coords()[0])
+        
+        land = LandPermit.objects.all()[0]
+        self.assertEqual(land.lat(), land.point.get_coords()[1])
+        self.assertEqual(land.lng(), land.point.get_coords()[0])
+        
+        building = BuildingPermit.objects.all()[0]
+        self.assertEqual(building.lat(), building.point.get_coords()[1])
+        self.assertEqual(building.lng(), building.point.get_coords()[0])
+        
+        violation = Violation.objects.all()[0]
+        self.assertEqual(violation.lat(), violation.point.get_coords()[1])
+        self.assertEqual(violation.lng(), violation.point.get_coords()[0])
+        
+        food_violation = FoodViolation.objects.all()[0]
+        self.assertEqual(food_violation.lat(), food_violation.point.get_coords()[1])
+        self.assertEqual(food_violation.lng(), food_violation.point.get_coords()[0])
+    
     def test_neighborhoods_exist(self):
         """Neighborhoods exist in database"""
         self.assertEqual(len(Neighborhood.objects.filter(name='Ballard')), 1)

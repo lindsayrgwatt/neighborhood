@@ -9,10 +9,10 @@ urlpatterns = patterns('',
 )
 
 urlpatterns += patterns('hoods.views',
-    url(r'^neighborhood/(?P<neighborhood>[\w\-]+)/date/(?P<date>\d{8})/', 'detail'),
-    url(r'^neighborhood/(?P<neighborhood>[\w\-]+)/date/(?P<date>today)/', 'detail'),
-    url(r'^neighborhood/(?P<neighborhood>[\w\-]+)/date/(?P<date>yesterday)/', 'detail'),
-    url(r'^neighborhood/(?P<neighborhood>[\w\-]+)/', 'detail', {'date':'yesterday'}),
-    url(r'^(?P<neighborhood>[\w\-]+)/', 'detail', {'date':'yesterday'}),
+    url(r'^neighborhood/(?P<neighborhood>[\w\-]+)/date/(?P<date>\d{8})/$', 'detail'),
+    url(r'^neighborhood/(?P<neighborhood>[\w\-]+)/date/(?P<date>today)/$', 'detail'),
+    url(r'^neighborhood/(?P<neighborhood>[\w\-]+)/date/(?P<date>yesterday)/$', 'detail'),
+    url(r'^neighborhood/(?P<neighborhood>[\w\-]+)/$', 'detail', {'date':'yesterday'}),
+    url(r'^(?P<neighborhood>[\w\-]+)/$', 'detail', {'date':'yesterday'}),
     url(r'^$', 'detail', {'neighborhood':'Seattle', 'date':'yesterday'}),
 )

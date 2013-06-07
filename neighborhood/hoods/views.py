@@ -60,9 +60,6 @@ def calculate_date(date="yesterday"):
     else:
         label = "On " + date_obj.strftime("%A, %B %d, %Y")
     
-    print "label is:"
-    print label
-    
     return(True, date_obj.date(), label)
 
 
@@ -87,17 +84,17 @@ def get_details(date, neighborhood=None):
     datetime_end = pacific.localize(date_end)
     
     if neighborhood:
-        fires = Fire.objects.filter(point__intersects=(neighborhood.mpoly), date__range=(datetime_start, datetime_end))
-        building_permits = BuildingPermit.objects.filter(point__intersects=(neighborhood.mpoly), application_date__range=(datetime_start.date(), datetime_end.date()))
-        land_permits = LandPermit.objects.filter(point__intersects=(neighborhood.mpoly), application_date__range=(datetime_start.date(), datetime_end.date()))
+        fires = Fire.objects.filter(point__intersects=(neighborhood.mpoly), date__range=(datetime_start, datetime_end)).order_by('-date')
+        building_permits = BuildingPermit.objects.filter(point__intersects=(neighborhood.mpoly), application_date__range=(datetime_start.date(), datetime_end.date())).order_by('-value')
+        land_permits = LandPermit.objects.filter(point__intersects=(neighborhood.mpoly), application_date__range=(datetime_start.date(), datetime_end.date())).order_by('-value')
         code_violations = Violation.objects.filter(point__intersects=(neighborhood.mpoly), date_case_created__range=(datetime_start.date(), datetime_end.date()))
         food_violations = FoodViolation.objects.filter(point__intersects=(neighborhood.mpoly), inspection_date__range=(datetime_start.date(), datetime_end.date()))
         police_calls = Police911Call.objects.filter(point__intersects=(neighborhood.mpoly), date__range=(datetime_start, datetime_end))
         police_incidents = Police911Incident.objects.filter(point__intersects=(neighborhood.mpoly), date__range=(datetime_start, datetime_end))
     else:
-        fires = Fire.objects.filter(date__range=(datetime_start, datetime_end))
-        building_permits = BuildingPermit.objects.filter(application_date__range=(datetime_start.date(), datetime_end.date()))
-        land_permits = LandPermit.objects.filter(application_date__range=(datetime_start.date(), datetime_end.date()))
+        fires = Fire.objects.filter(date__range=(datetime_start, datetime_end)).order_by('-date')
+        building_permits = BuildingPermit.objects.filter(application_date__range=(datetime_start.date(), datetime_end.date())).order_by('-value')
+        land_permits = LandPermit.objects.filter(application_date__range=(datetime_start.date(), datetime_end.date())).order_by('-value')
         code_violations = Violation.objects.filter(date_case_created__range=(datetime_start.date(), datetime_end.date()))
         food_violations = FoodViolation.objects.filter(inspection_date__range=(datetime_start.date(), datetime_end.date()))
         police_calls = Police911Call.objects.filter(date__range=(datetime_start, datetime_end))
@@ -135,13 +132,15 @@ def get_details(date, neighborhood=None):
 
 ################# Actual views #######################
 def detail(request, neighborhood, date):
+    print date
+    
     # Date
     validated_date = calculate_date(date)
     
-    weekend = is_weekend(validated_date[1])
-    
     if not validated_date[0]:
         return HttpResponse("That's an invalide date. I expect date values of DDMMYYYY or 'yesterday' or 'today'")
+    
+    weekend = is_weekend(validated_date[1])
     
     # Check neighborhood & get details
     prospective_neighborhood = calculate_neighborhood(neighborhood)
@@ -156,10 +155,8 @@ def detail(request, neighborhood, date):
         neighborhood_name = prospective_neighborhood[2].name
         details = get_details(validated_date[1], prospective_neighborhood[2])
     
-    
     # Aggregate permits
     keys = [permit.label for permit in PermitValue.objects.all().order_by('value')]
-    #keys = details[3].keys()
     permits = []
     for key in keys:
         permits.append({
@@ -168,22 +165,37 @@ def detail(request, neighborhood, date):
             'building':details[3][key]
         })
     
+    # Calculate available police categories
+    keys = [key for key in details[10] if details[10][key] > 0]
+    keys2 = [key for key in details[12] if details[12][key] > 0]
+    available_police_categories = list(set(keys).union(set(keys2)))
+    available_police_categories.sort()
+    
     context = {
         'neighborhood_name': neighborhood_name,
         'date_label': validated_date[2],
+        'date_object': validated_date[1],
         'police_call_count': details[9].count(),
         'police_incident_count': details[11].count(),
         'police_call_detail': details[10],
         'police_incident_detail': details[12],
+        'police_categories':available_police_categories,
+        'police_calls':details[9],
+        'police_incidents':details[11],
         'fire_count': details[0].count(),
+        'fires': details[0],
         'fire_detail': details[1],
         'land_permit_count':details[4].count(),
         'building_permit_count': details[2].count(),
         'permit_detail': permits,
+        'land_permits':details[4],
+        'building_permits':details[2],
         'weekend': weekend,
         'code_violations_count': details[6].count(),
         'food_violations_count': details[8].count(),
         'code_violations_details': details[7],
+        'code_violations': details[6],
+        'food_violations': details[8],
     }
     
     return render_to_response('hoods/summary.html', context)
