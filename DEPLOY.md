@@ -97,6 +97,24 @@ or
 
 I use only 1 thread (`-c 1`) because I found that using multiple threads created duplicate data. Also beware running all the tasks at exactly the same time. I found that this caused celery to hang and use 100% CPU on one core.
 
+### 4.
+
+If you want to create your own maps from scratch, you'll need to download Open Street Map (OSM) data and import it into TileMill. Instructions [for a mac](http://www.mapbox.com/tilemill/docs/guides/osm-bright-mac-quickstart/).
+
+If you're using Homebrewed's PostgreSQL on a Mac, you'll need to specify the location of the UNIX socket with the `-H` flag otherwise you'll get a message about no sockets at `/var/pgsql_sockets/`:
+
+`osm2pgsql -c -G -d osm -S /usr/local/share/osm2pgsql/default.style -H /tmp seattle.osm`
+
+Don't bother using the `osm_utils.py` file to get the URL for downloading OSM data; it's too big an area and will error out. Instead, download the xml data from [metro.teczno.com](http://metro.teczno.com/#seattle).
+
+Once you've got the OSM Data into Tilemill you'll need to get it out as PNGs.
+
+Tilemill's [export can be scripted](http://gis.stackexchange.com/questions/52401/how-to-automate-export-in-tilemill). On my Mac, I do the following:
+1) `cd` to `/Applications/TileMill.app/Contents/Resources` or similar
+2) run a command like: `./index.js export OSMBright ~/Desktop/test.png --bbox='-122.368432,47.681062,-122.342132,47.707362' --width=1024 --height=1024 --format=png `
+
+The file `hoods.osm_utils` will spit out all the command line commands for you.
+
 ## dotCloud Gotchas
 
 If you don't know anything about dotCloud, please read how to [get started with Django on dotCloud](http://docs.dotcloud.com/tutorials/python/django/) then [add geoDjango](http://docs.dotcloud.com/tutorials/python/geodjango/), a [Celery queue](http://docs.dotcloud.com/tutorials/python/django-celery/) powered by [Redis](http://docs.dotcloud.com/services/redis/). Any changes to these are noted below.

@@ -16,6 +16,7 @@ from data.models import PoliceEventAggregateGroup, PoliceEventGroup, Police911Ca
 from hoods.views import calculate_neighborhood, calculate_date, is_weekend, get_details
 import hoods.load as neighborhood_loader
 from data.load import create_permit_ranges, create_violation_aggregates, create_police_aggregates
+from hoods.utils import haversine
 
 pacific = pytz.timezone('US/Pacific')
 
@@ -202,6 +203,7 @@ class NeighborhoodTestCase(unittest.TestCase):
             self.__class__.ClassIsSetup = True
         
     
+    
     def test_lat_lng_getters_work(self):
         police_call = Police911Call.objects.all()[0]
         self.assertEqual(police_call.lat(), police_call.point.get_coords()[1])
@@ -231,15 +233,18 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(food_violation.lat(), food_violation.point.get_coords()[1])
         self.assertEqual(food_violation.lng(), food_violation.point.get_coords()[0])
     
+    
     def test_neighborhoods_exist(self):
         """Neighborhoods exist in database"""
         self.assertEqual(len(Neighborhood.objects.filter(name='Ballard')), 1)
-        
+    
+    
     def test_geo_search_works(self):
         """Can determine if points exist in Seattle neighborhoods"""
         pnt_wkt = 'POINT(-122.38393 47.66704)' # Ballard farmer's market
         self.assertEqual(Neighborhood.objects.filter(mpoly__contains=pnt_wkt)[0].name, 'Ballard')
-        
+    
+    
     def test_neighborhood_find(self):
         """See if can correctly find neighborhoods based on text"""
         self.assertEqual(calculate_neighborhood('asdfasdfasdfasdfasdf'), (False, False, None))
@@ -249,6 +254,7 @@ class NeighborhoodTestCase(unittest.TestCase):
         
         self.assertEqual(calculate_neighborhood('queen-anne'), (True, False, Neighborhood.objects.get(name="Queen Anne")))
         self.assertEqual(calculate_neighborhood('QUEEN-AnNe'), (True, False, Neighborhood.objects.get(name="Queen Anne")))
+    
     
     def test_geo_and_time_aggregation_works(self):
         """ See if correctly find objects"""
@@ -313,6 +319,36 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(seattle_objs_yesterday[12]['Homicide'], 2) # Police incident counts by category
     
 
+    def test_neighborhood_bounds_works(self):
+        atlantic = Neighborhood.objects.get(name="Atlantic")
+        belltown = Neighborhood.objects.get(name="Belltown")
+        
+        self.assertEqual(belltown.wider_than_tall(), True)
+        self.assertEqual(atlantic.wider_than_tall(), False)
+        
+        bounds = belltown.padded_bounds()
+        
+        self.assertEqual((bounds[0] - bounds[2]) - (bounds[1] - bounds[3]) < 0.000001, True) # Avoid limits to decimal precision
+        self.assertEqual(bounds[0], 47.62780997138224)
+        self.assertEqual(bounds[1], -122.33524759443412)
+        self.assertEqual(bounds[2], 47.60137586981825)
+        self.assertEqual(bounds[3], -122.36168169599812)
+        
+        bounds = atlantic.padded_bounds()
+        
+        self.assertEqual((bounds[0] - bounds[2]) - (bounds[1] - bounds[3]) < 0.000001, True)
+        self.assertEqual(bounds[0], 47.60424933568962)
+        self.assertEqual(bounds[1], -122.28649089225455)
+        self.assertEqual(bounds[2], 47.573800714661466)
+        self.assertEqual(bounds[3], -122.31693951328269)
+    
+    def test_tilemill_bounding_box_works(self):
+        belltown = Neighborhood.objects.get(name="Belltown")
+        
+        padded_bounds = "-122.361682,47.601376,-122.335248,47.627810"
+        
+        self.assertEqual(belltown.tilemill_bounds(), padded_bounds)
+    
 
 class HelperTestCase(unittest.TestCase):
     def test_date_calculation(self):
@@ -367,4 +403,15 @@ class HelperTestCase(unittest.TestCase):
         self.assertEqual(is_weekend(friday), False)
         self.assertEqual(is_weekend(saturday), True)
         self.assertEqual(is_weekend(sunday), True)
+    
+    def test_haversine(self):
+        lat_a = 51.885
+        lng_a = 0.235
+        
+        lat_b = 49.008
+        lng_b = 2.549
+        
+        km = haversine(lng_a, lat_a, lng_b, lat_b)
+        
+        self.assertEqual(359.3823602146919, km)
     

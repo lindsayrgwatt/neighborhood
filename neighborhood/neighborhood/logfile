@@ -1,8 +1,10 @@
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ALTER COLUMN "slug" TYPE varchar(64), ALTER COLUMN "slug" SET NOT NULL, ALTER COLUMN "slug" DROP DEFAULT;" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ADD CONSTRAINT "hoods_neighborhood_name_uniq" UNIQUE ("name")" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE INDEX "hoods_neighborhood_slug" ON "hoods_neighborhood" ("slug");" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE INDEX "hoods_neighborhood_slug_like" ON "hoods_neighborhood" ("slug" varchar_pattern_ops);" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "
+[12/Jun/2013 10:08:14] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ALTER COLUMN "city" TYPE varchar(64), ALTER COLUMN "city" SET NOT NULL, ALTER COLUMN "city" DROP DEFAULT;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ADD COLUMN "slug" varchar(64) NOT NULL DEFAULT ' ';" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ALTER COLUMN "slug" TYPE varchar(64), ALTER COLUMN "slug" SET NOT NULL, ALTER COLUMN "slug" DROP DEFAULT;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ADD CONSTRAINT "hoods_neighborhood_name_uniq" UNIQUE ("name")" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "hoods_neighborhood_slug" ON "hoods_neighborhood" ("slug");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "hoods_neighborhood_slug_like" ON "hoods_neighborhood" ("slug" varchar_pattern_ops);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -13,7 +15,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'hoods_neighborhood']"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -24,32 +26,32 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'hoods_neighborhood']"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" DROP CONSTRAINT "hoods_neighborhood_name_uniq"" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE TABLE "data_fireincidentaggregatetype" ("id" serial NOT NULL PRIMARY KEY, "description" varchar(40) NOT NULL UNIQUE);" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE TABLE "data_fireincidenttype" ("id" serial NOT NULL PRIMARY KEY, "description" varchar(40) NOT NULL UNIQUE, "aggregate_id" integer NOT NULL);" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE TABLE "data_fire" ("id" serial NOT NULL PRIMARY KEY, "address" varchar(60) NOT NULL, "incident_number" varchar(10) NOT NULL, "incident_category_id" integer NOT NULL, "date" timestamp with time zone NOT NULL);" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "ALTER TABLE "data_fireincidenttype" ADD CONSTRAINT "aggregate_id_refs_id_25be6ecb0d0d8c19" FOREIGN KEY ("aggregate_id") REFERENCES "data_fireincidentaggregatetype" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE INDEX "data_fireincidenttype_aggregate_id" ON "data_fireincidenttype" ("aggregate_id");" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE INDEX "data_fire_incident_number" ON "data_fire" ("incident_number");" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE INDEX "data_fire_incident_number_like" ON "data_fire" ("incident_number" varchar_pattern_ops);" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "ALTER TABLE "data_fire" ADD CONSTRAINT "incident_category_id_refs_id_4627661413414d0d" FOREIGN KEY ("incident_category_id") REFERENCES "data_fireincidenttype" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE INDEX "data_fire_incident_category_id" ON "data_fire" ("incident_category_id");" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE INDEX "data_fire_date" ON "data_fire" ("date");" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_fire', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "ALTER TABLE "data_fire" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE INDEX "data_fire_point_id" ON "data_fire" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE TABLE "data_permitvalue" ("id" serial NOT NULL PRIMARY KEY, "value" integer NOT NULL UNIQUE, "label" varchar(20) NOT NULL);" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE TABLE "data_buildingpermit" ("id" serial NOT NULL PRIMARY KEY, "permit_type" varchar(16) NOT NULL, "application_date" date NOT NULL, "permit_number" integer NOT NULL, "address" varchar(60) NOT NULL, "description" text NOT NULL, "value" integer NOT NULL, "value_range_id" integer NULL, "url" varchar(200) NOT NULL);" with params "[]"
-[06/Jun/2013 20:05:54] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_application_date" ON "data_buildingpermit" ("application_date");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_permit_number" ON "data_buildingpermit" ("permit_number");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_value" ON "data_buildingpermit" ("value");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ADD CONSTRAINT "value_range_id_refs_id_2f303474afdb8327" FOREIGN KEY ("value_range_id") REFERENCES "data_permitvalue" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_value_range_id" ON "data_buildingpermit" ("value_range_id");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_buildingpermit', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_point_id" ON "data_buildingpermit" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE TABLE "data_landpermit" ("id" serial NOT NULL PRIMARY KEY, "application_date" date NOT NULL, "permit_number" integer NOT NULL, "address" varchar(60) NOT NULL, "description" text NOT NULL, "value" integer NOT NULL, "value_range_id" integer NOT NULL, "url" varchar(200) NOT NULL);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" DROP CONSTRAINT "hoods_neighborhood_name_uniq"" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_fireincidentaggregatetype" ("id" serial NOT NULL PRIMARY KEY, "description" varchar(40) NOT NULL UNIQUE);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_fireincidenttype" ("id" serial NOT NULL PRIMARY KEY, "description" varchar(40) NOT NULL UNIQUE, "aggregate_id" integer NOT NULL);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_fire" ("id" serial NOT NULL PRIMARY KEY, "address" varchar(60) NOT NULL, "incident_number" varchar(10) NOT NULL, "incident_category_id" integer NOT NULL, "date" timestamp with time zone NOT NULL);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_fireincidenttype" ADD CONSTRAINT "aggregate_id_refs_id_25be6ecb0d0d8c19" FOREIGN KEY ("aggregate_id") REFERENCES "data_fireincidentaggregatetype" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_fireincidenttype_aggregate_id" ON "data_fireincidenttype" ("aggregate_id");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_fire_incident_number" ON "data_fire" ("incident_number");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_fire_incident_number_like" ON "data_fire" ("incident_number" varchar_pattern_ops);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_fire" ADD CONSTRAINT "incident_category_id_refs_id_4627661413414d0d" FOREIGN KEY ("incident_category_id") REFERENCES "data_fireincidenttype" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_fire_incident_category_id" ON "data_fire" ("incident_category_id");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_fire_date" ON "data_fire" ("date");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_fire', 'point', 4326, 'POINT', 2);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_fire" ALTER "point" SET NOT NULL;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_fire_point_id" ON "data_fire" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_permitvalue" ("id" serial NOT NULL PRIMARY KEY, "value" integer NOT NULL UNIQUE, "label" varchar(20) NOT NULL);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_buildingpermit" ("id" serial NOT NULL PRIMARY KEY, "permit_type" varchar(16) NOT NULL, "application_date" date NOT NULL, "permit_number" integer NOT NULL, "address" varchar(60) NOT NULL, "description" text NOT NULL, "value" integer NOT NULL, "value_range_id" integer NULL, "url" varchar(200) NOT NULL);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_application_date" ON "data_buildingpermit" ("application_date");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_permit_number" ON "data_buildingpermit" ("permit_number");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_value" ON "data_buildingpermit" ("value");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ADD CONSTRAINT "value_range_id_refs_id_2f303474afdb8327" FOREIGN KEY ("value_range_id") REFERENCES "data_permitvalue" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_value_range_id" ON "data_buildingpermit" ("value_range_id");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_buildingpermit', 'point', 4326, 'POINT', 2);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ALTER "point" SET NOT NULL;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_point_id" ON "data_buildingpermit" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_landpermit" ("id" serial NOT NULL PRIMARY KEY, "application_date" date NOT NULL, "permit_number" integer NOT NULL, "address" varchar(60) NOT NULL, "description" text NOT NULL, "value" integer NOT NULL, "value_range_id" integer NOT NULL, "url" varchar(200) NOT NULL);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -60,7 +62,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_buildingpermit']"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -71,7 +73,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_buildingpermit']"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.constraint_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -82,7 +84,7 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_buildingpermit']"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "
                 SELECT kc.constraint_name, kc.column_name, c.constraint_type
                 FROM information_schema.key_column_usage AS kc
                 JOIN information_schema.table_constraints AS c ON
@@ -93,237 +95,52 @@
                     kc.table_schema = %s AND
                     kc.table_name = %s
             " with params "['public', 'data_buildingpermit']"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" DROP CONSTRAINT "value_range_id_refs_id_2f303474afdb8327"" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ALTER COLUMN "value_range_id" TYPE integer, ALTER COLUMN "value_range_id" SET NOT NULL, ALTER COLUMN "value_range_id" SET DEFAULT %s ;" with params "[1]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ADD CONSTRAINT "value_range_id_refs_id_2f303474afdb8327" FOREIGN KEY ("value_range_id") REFERENCES "data_permitvalue" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_application_date" ON "data_landpermit" ("application_date");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_permit_number" ON "data_landpermit" ("permit_number");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_value" ON "data_landpermit" ("value");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_landpermit" ADD CONSTRAINT "value_range_id_refs_id_2c7d53aa736a794e" FOREIGN KEY ("value_range_id") REFERENCES "data_permitvalue" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_value_range_id" ON "data_landpermit" ("value_range_id");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_landpermit', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_landpermit" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_point_id" ON "data_landpermit" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE TABLE "data_violationaggregatecategory" ("id" serial NOT NULL PRIMARY KEY, "category" varchar(40) NOT NULL UNIQUE);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE TABLE "data_violation" ("id" serial NOT NULL PRIMARY KEY, "case_number" integer NOT NULL UNIQUE, "address" varchar(100) NOT NULL, "description" text NOT NULL, "group_id" integer NOT NULL, "date_case_created" date NOT NULL, "url" varchar(200) NOT NULL);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE TABLE "data_violationcategory" ("id" serial NOT NULL PRIMARY KEY, "category" varchar(40) NOT NULL UNIQUE, "aggregate_id" integer NOT NULL);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_violation" ADD CONSTRAINT "group_id_refs_id_586fbed415b52767" FOREIGN KEY ("group_id") REFERENCES "data_violationcategory" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_violation_group_id" ON "data_violation" ("group_id");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_violation_date_case_created" ON "data_violation" ("date_case_created");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_violation', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_violation" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_violation_point_id" ON "data_violation" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_violationcategory" ADD CONSTRAINT "aggregate_id_refs_id_41755f7195cfb1b5" FOREIGN KEY ("aggregate_id") REFERENCES "data_violationaggregatecategory" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_violationcategory_aggregate_id" ON "data_violationcategory" ("aggregate_id");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE TABLE "data_foodviolation" ("id" serial NOT NULL PRIMARY KEY, "name" varchar(100) NOT NULL, "inspection_date" date NOT NULL, "address" varchar(100) NOT NULL, "group_id" integer NOT NULL, "code" varchar(4) NOT NULL, "description" varchar(100) NOT NULL, "violation_num" varchar(10) NOT NULL);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_inspection_date" ON "data_foodviolation" ("inspection_date");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ADD CONSTRAINT "group_id_refs_id_6eb252daa768a021" FOREIGN KEY ("group_id") REFERENCES "data_violationcategory" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_group_id" ON "data_foodviolation" ("group_id");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_foodviolation', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_point_id" ON "data_foodviolation" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ADD CONSTRAINT "data_foodviolation_violation_num_uniq" UNIQUE ("violation_num")" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ADD COLUMN "violation_type" varchar(4) NOT NULL DEFAULT 'Fake';" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ALTER COLUMN "violation_type" TYPE varchar(4), ALTER COLUMN "violation_type" SET NOT NULL, ALTER COLUMN "violation_type" DROP DEFAULT;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE TABLE "data_policeeventaggregategroup" ("id" serial NOT NULL PRIMARY KEY, "category" varchar(32) NOT NULL UNIQUE);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE TABLE "data_police911incident" ("id" serial NOT NULL PRIMARY KEY, "general_offense_number" bigint NOT NULL UNIQUE, "description" varchar(75) NOT NULL, "group_id" integer NOT NULL, "date" timestamp with time zone NOT NULL, "address" varchar(75) NOT NULL);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE TABLE "data_police911call" ("id" serial NOT NULL PRIMARY KEY, "general_offense_number" bigint NOT NULL UNIQUE, "description" varchar(75) NOT NULL, "group_id" integer NOT NULL, "date" timestamp with time zone NOT NULL, "address" varchar(75) NOT NULL);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE TABLE "data_policeeventgroup" ("id" serial NOT NULL PRIMARY KEY, "description" varchar(40) NOT NULL UNIQUE, "category_id" integer NOT NULL);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_police911incident" ADD CONSTRAINT "group_id_refs_id_2559cc09394813c4" FOREIGN KEY ("group_id") REFERENCES "data_policeeventgroup" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_police911incident_group_id" ON "data_police911incident" ("group_id");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_police911incident', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_police911incident" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_police911incident_point_id" ON "data_police911incident" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_police911call" ADD CONSTRAINT "group_id_refs_id_28fb582d4a9bc6be" FOREIGN KEY ("group_id") REFERENCES "data_policeeventgroup" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_police911call_group_id" ON "data_police911call" ("group_id");" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_police911call', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_police911call" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_police911call_point_id" ON "data_police911call" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "ALTER TABLE "data_policeeventgroup" ADD CONSTRAINT "category_id_refs_id_138cc33b3c4fd2e1" FOREIGN KEY ("category_id") REFERENCES "data_policeeventaggregategroup" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:05:55] DEBUG [south:270] execute "CREATE INDEX "data_policeeventgroup_category_id" ON "data_policeeventgroup" ("category_id");" with params "[]"
-[06/Jun/2013 20:05:56] INFO [data.models:31] New type of fire category: Big Fire
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "celery_taskmeta" ("id" serial NOT NULL PRIMARY KEY, "task_id" varchar(255) NOT NULL UNIQUE, "status" varchar(50) NOT NULL, "result" text NULL, "date_done" timestamp with time zone NOT NULL, "traceback" text NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "celery_tasksetmeta" ("id" serial NOT NULL PRIMARY KEY, "taskset_id" varchar(255) NOT NULL UNIQUE, "result" text NOT NULL, "date_done" timestamp with time zone NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "djcelery_intervalschedule" ("id" serial NOT NULL PRIMARY KEY, "every" integer NOT NULL, "period" varchar(24) NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "djcelery_crontabschedule" ("id" serial NOT NULL PRIMARY KEY, "minute" varchar(64) NOT NULL, "hour" varchar(64) NOT NULL, "day_of_week" varchar(64) NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "djcelery_periodictasks" ("ident" smallint NOT NULL PRIMARY KEY, "last_update" timestamp with time zone NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "djcelery_periodictask" ("id" serial NOT NULL PRIMARY KEY, "name" varchar(200) NOT NULL UNIQUE, "task" varchar(200) NOT NULL, "interval_id" integer NULL, "crontab_id" integer NULL, "args" text NOT NULL, "kwargs" text NOT NULL, "queue" varchar(200) NULL, "exchange" varchar(200) NULL, "routing_key" varchar(200) NULL, "expires" timestamp with time zone NULL, "enabled" boolean NOT NULL, "last_run_at" timestamp with time zone NULL, "total_run_count" integer CHECK ("total_run_count" >= 0) NOT NULL, "date_changed" timestamp with time zone NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "djcelery_workerstate" ("id" serial NOT NULL PRIMARY KEY, "hostname" varchar(255) NOT NULL UNIQUE, "last_heartbeat" timestamp with time zone NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "djcelery_taskstate" ("id" serial NOT NULL PRIMARY KEY, "state" varchar(64) NOT NULL, "task_id" varchar(36) NOT NULL UNIQUE, "name" varchar(200) NULL, "tstamp" timestamp with time zone NOT NULL, "args" text NULL, "kwargs" text NULL, "eta" timestamp with time zone NULL, "expires" timestamp with time zone NULL, "result" text NULL, "traceback" text NULL, "runtime" double precision NULL, "retries" integer NOT NULL, "worker_id" integer NULL, "hidden" boolean NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "djcelery_periodictask" ADD CONSTRAINT "interval_id_refs_id_672c7616f2054349" FOREIGN KEY ("interval_id") REFERENCES "djcelery_intervalschedule" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "djcelery_periodictask_interval_id" ON "djcelery_periodictask" ("interval_id");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "djcelery_periodictask" ADD CONSTRAINT "crontab_id_refs_id_2c92a393ebff5e74" FOREIGN KEY ("crontab_id") REFERENCES "djcelery_crontabschedule" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "djcelery_periodictask_crontab_id" ON "djcelery_periodictask" ("crontab_id");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "djcelery_workerstate_last_heartbeat" ON "djcelery_workerstate" ("last_heartbeat");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_state" ON "djcelery_taskstate" ("state");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_state_like" ON "djcelery_taskstate" ("state" varchar_pattern_ops);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_name" ON "djcelery_taskstate" ("name");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_name_like" ON "djcelery_taskstate" ("name" varchar_pattern_ops);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_tstamp" ON "djcelery_taskstate" ("tstamp");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "djcelery_taskstate" ADD CONSTRAINT "worker_id_refs_id_13af6e2204e3453a" FOREIGN KEY ("worker_id") REFERENCES "djcelery_workerstate" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_worker_id" ON "djcelery_taskstate" ("worker_id");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "djcelery_taskstate_hidden" ON "djcelery_taskstate" ("hidden");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "djcelery_periodictask" ADD COLUMN "description" text NOT NULL DEFAULT '';" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "djcelery_periodictask" ALTER COLUMN "description" TYPE text, ALTER COLUMN "description" SET NOT NULL, ALTER COLUMN "description" DROP DEFAULT;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "celery_taskmeta" ADD COLUMN "hidden" boolean NOT NULL DEFAULT False;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "celery_taskmeta" ALTER COLUMN "hidden" TYPE boolean, ALTER COLUMN "hidden" SET NOT NULL, ALTER COLUMN "hidden" DROP DEFAULT;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "celery_tasksetmeta" ADD COLUMN "hidden" boolean NOT NULL DEFAULT False;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "celery_tasksetmeta" ALTER COLUMN "hidden" TYPE boolean, ALTER COLUMN "hidden" SET NOT NULL, ALTER COLUMN "hidden" DROP DEFAULT;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "celery_taskmeta_hidden" ON "celery_taskmeta" ("hidden");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "celery_tasksetmeta_hidden" ON "celery_tasksetmeta" ("hidden");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "djcelery_crontabschedule" ADD COLUMN "day_of_month" varchar(64) NOT NULL DEFAULT '*';" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "djcelery_crontabschedule" ALTER COLUMN "day_of_month" TYPE varchar(64), ALTER COLUMN "day_of_month" SET NOT NULL, ALTER COLUMN "day_of_month" DROP DEFAULT;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "djcelery_crontabschedule" ADD COLUMN "month_of_year" varchar(64) NOT NULL DEFAULT '*';" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "djcelery_crontabschedule" ALTER COLUMN "month_of_year" TYPE varchar(64), ALTER COLUMN "month_of_year" SET NOT NULL, ALTER COLUMN "month_of_year" DROP DEFAULT;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "celery_taskmeta" ADD COLUMN "meta" text NULL;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "hoods_neighborhood" ("id" serial NOT NULL PRIMARY KEY, "name" varchar(64) NOT NULL, "region_id" integer NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "SELECT AddGeometryColumn('hoods_neighborhood', 'mpoly', 4326, 'MULTIPOLYGON', 2);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ALTER "mpoly" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "hoods_neighborhood_mpoly_id" ON "hoods_neighborhood" USING GIST ( "mpoly" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ADD COLUMN "city" varchar(64) NOT NULL DEFAULT 'default';" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ALTER COLUMN "city" TYPE varchar(64), ALTER COLUMN "city" SET NOT NULL, ALTER COLUMN "city" DROP DEFAULT;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ADD COLUMN "slug" varchar(64) NOT NULL DEFAULT ' ';" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ALTER COLUMN "slug" TYPE varchar(64), ALTER COLUMN "slug" SET NOT NULL, ALTER COLUMN "slug" DROP DEFAULT;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" ADD CONSTRAINT "hoods_neighborhood_name_uniq" UNIQUE ("name")" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "hoods_neighborhood_slug" ON "hoods_neighborhood" ("slug");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "hoods_neighborhood_slug_like" ON "hoods_neighborhood" ("slug" varchar_pattern_ops);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "
-                SELECT kc.constraint_name, kc.column_name, c.constraint_type
-                FROM information_schema.constraint_column_usage AS kc
-                JOIN information_schema.table_constraints AS c ON
-                    kc.table_schema = c.table_schema AND
-                    kc.table_name = c.table_name AND
-                    kc.constraint_name = c.constraint_name
-                WHERE
-                    kc.table_schema = %s AND
-                    kc.table_name = %s
-            " with params "['public', 'hoods_neighborhood']"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "
-                SELECT kc.constraint_name, kc.column_name, c.constraint_type
-                FROM information_schema.key_column_usage AS kc
-                JOIN information_schema.table_constraints AS c ON
-                    kc.table_schema = c.table_schema AND
-                    kc.table_name = c.table_name AND
-                    kc.constraint_name = c.constraint_name
-                WHERE
-                    kc.table_schema = %s AND
-                    kc.table_name = %s
-            " with params "['public', 'hoods_neighborhood']"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "hoods_neighborhood" DROP CONSTRAINT "hoods_neighborhood_name_uniq"" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "data_fireincidentaggregatetype" ("id" serial NOT NULL PRIMARY KEY, "description" varchar(40) NOT NULL UNIQUE);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "data_fireincidenttype" ("id" serial NOT NULL PRIMARY KEY, "description" varchar(40) NOT NULL UNIQUE, "aggregate_id" integer NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "data_fire" ("id" serial NOT NULL PRIMARY KEY, "address" varchar(60) NOT NULL, "incident_number" varchar(10) NOT NULL, "incident_category_id" integer NOT NULL, "date" timestamp with time zone NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "data_fireincidenttype" ADD CONSTRAINT "aggregate_id_refs_id_25be6ecb0d0d8c19" FOREIGN KEY ("aggregate_id") REFERENCES "data_fireincidentaggregatetype" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "data_fireincidenttype_aggregate_id" ON "data_fireincidenttype" ("aggregate_id");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "data_fire_incident_number" ON "data_fire" ("incident_number");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "data_fire_incident_number_like" ON "data_fire" ("incident_number" varchar_pattern_ops);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "data_fire" ADD CONSTRAINT "incident_category_id_refs_id_4627661413414d0d" FOREIGN KEY ("incident_category_id") REFERENCES "data_fireincidenttype" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "data_fire_incident_category_id" ON "data_fire" ("incident_category_id");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "data_fire_date" ON "data_fire" ("date");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_fire', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "data_fire" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "data_fire_point_id" ON "data_fire" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "data_permitvalue" ("id" serial NOT NULL PRIMARY KEY, "value" integer NOT NULL UNIQUE, "label" varchar(20) NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "data_buildingpermit" ("id" serial NOT NULL PRIMARY KEY, "permit_type" varchar(16) NOT NULL, "application_date" date NOT NULL, "permit_number" integer NOT NULL, "address" varchar(60) NOT NULL, "description" text NOT NULL, "value" integer NOT NULL, "value_range_id" integer NULL, "url" varchar(200) NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_application_date" ON "data_buildingpermit" ("application_date");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_permit_number" ON "data_buildingpermit" ("permit_number");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_value" ON "data_buildingpermit" ("value");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ADD CONSTRAINT "value_range_id_refs_id_2f303474afdb8327" FOREIGN KEY ("value_range_id") REFERENCES "data_permitvalue" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_value_range_id" ON "data_buildingpermit" ("value_range_id");" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_buildingpermit', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE INDEX "data_buildingpermit_point_id" ON "data_buildingpermit" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:52:08] DEBUG [south:270] execute "CREATE TABLE "data_landpermit" ("id" serial NOT NULL PRIMARY KEY, "application_date" date NOT NULL, "permit_number" integer NOT NULL, "address" varchar(60) NOT NULL, "description" text NOT NULL, "value" integer NOT NULL, "value_range_id" integer NOT NULL, "url" varchar(200) NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "
-                SELECT kc.constraint_name, kc.column_name, c.constraint_type
-                FROM information_schema.constraint_column_usage AS kc
-                JOIN information_schema.table_constraints AS c ON
-                    kc.table_schema = c.table_schema AND
-                    kc.table_name = c.table_name AND
-                    kc.constraint_name = c.constraint_name
-                WHERE
-                    kc.table_schema = %s AND
-                    kc.table_name = %s
-            " with params "['public', 'data_buildingpermit']"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "
-                SELECT kc.constraint_name, kc.column_name, c.constraint_type
-                FROM information_schema.key_column_usage AS kc
-                JOIN information_schema.table_constraints AS c ON
-                    kc.table_schema = c.table_schema AND
-                    kc.table_name = c.table_name AND
-                    kc.constraint_name = c.constraint_name
-                WHERE
-                    kc.table_schema = %s AND
-                    kc.table_name = %s
-            " with params "['public', 'data_buildingpermit']"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "
-                SELECT kc.constraint_name, kc.column_name, c.constraint_type
-                FROM information_schema.constraint_column_usage AS kc
-                JOIN information_schema.table_constraints AS c ON
-                    kc.table_schema = c.table_schema AND
-                    kc.table_name = c.table_name AND
-                    kc.constraint_name = c.constraint_name
-                WHERE
-                    kc.table_schema = %s AND
-                    kc.table_name = %s
-            " with params "['public', 'data_buildingpermit']"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "
-                SELECT kc.constraint_name, kc.column_name, c.constraint_type
-                FROM information_schema.key_column_usage AS kc
-                JOIN information_schema.table_constraints AS c ON
-                    kc.table_schema = c.table_schema AND
-                    kc.table_name = c.table_name AND
-                    kc.constraint_name = c.constraint_name
-                WHERE
-                    kc.table_schema = %s AND
-                    kc.table_name = %s
-            " with params "['public', 'data_buildingpermit']"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" DROP CONSTRAINT "value_range_id_refs_id_2f303474afdb8327"" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ALTER COLUMN "value_range_id" TYPE integer, ALTER COLUMN "value_range_id" SET NOT NULL, ALTER COLUMN "value_range_id" SET DEFAULT %s ;" with params "[1]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ADD CONSTRAINT "value_range_id_refs_id_2f303474afdb8327" FOREIGN KEY ("value_range_id") REFERENCES "data_permitvalue" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_application_date" ON "data_landpermit" ("application_date");" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_permit_number" ON "data_landpermit" ("permit_number");" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_value" ON "data_landpermit" ("value");" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_landpermit" ADD CONSTRAINT "value_range_id_refs_id_2c7d53aa736a794e" FOREIGN KEY ("value_range_id") REFERENCES "data_permitvalue" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_value_range_id" ON "data_landpermit" ("value_range_id");" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_landpermit', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_landpermit" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_point_id" ON "data_landpermit" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE TABLE "data_violationaggregatecategory" ("id" serial NOT NULL PRIMARY KEY, "category" varchar(40) NOT NULL UNIQUE);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE TABLE "data_violation" ("id" serial NOT NULL PRIMARY KEY, "case_number" integer NOT NULL UNIQUE, "address" varchar(100) NOT NULL, "description" text NOT NULL, "group_id" integer NOT NULL, "date_case_created" date NOT NULL, "url" varchar(200) NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE TABLE "data_violationcategory" ("id" serial NOT NULL PRIMARY KEY, "category" varchar(40) NOT NULL UNIQUE, "aggregate_id" integer NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_violation" ADD CONSTRAINT "group_id_refs_id_586fbed415b52767" FOREIGN KEY ("group_id") REFERENCES "data_violationcategory" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_violation_group_id" ON "data_violation" ("group_id");" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_violation_date_case_created" ON "data_violation" ("date_case_created");" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_violation', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_violation" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_violation_point_id" ON "data_violation" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_violationcategory" ADD CONSTRAINT "aggregate_id_refs_id_41755f7195cfb1b5" FOREIGN KEY ("aggregate_id") REFERENCES "data_violationaggregatecategory" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_violationcategory_aggregate_id" ON "data_violationcategory" ("aggregate_id");" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE TABLE "data_foodviolation" ("id" serial NOT NULL PRIMARY KEY, "name" varchar(100) NOT NULL, "inspection_date" date NOT NULL, "address" varchar(100) NOT NULL, "group_id" integer NOT NULL, "code" varchar(4) NOT NULL, "description" varchar(100) NOT NULL, "violation_num" varchar(10) NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_inspection_date" ON "data_foodviolation" ("inspection_date");" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ADD CONSTRAINT "group_id_refs_id_6eb252daa768a021" FOREIGN KEY ("group_id") REFERENCES "data_violationcategory" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_group_id" ON "data_foodviolation" ("group_id");" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_foodviolation', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_point_id" ON "data_foodviolation" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ADD CONSTRAINT "data_foodviolation_violation_num_uniq" UNIQUE ("violation_num")" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ADD COLUMN "violation_type" varchar(4) NOT NULL DEFAULT 'Fake';" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ALTER COLUMN "violation_type" TYPE varchar(4), ALTER COLUMN "violation_type" SET NOT NULL, ALTER COLUMN "violation_type" DROP DEFAULT;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE TABLE "data_policeeventaggregategroup" ("id" serial NOT NULL PRIMARY KEY, "category" varchar(32) NOT NULL UNIQUE);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE TABLE "data_police911incident" ("id" serial NOT NULL PRIMARY KEY, "general_offense_number" bigint NOT NULL UNIQUE, "description" varchar(75) NOT NULL, "group_id" integer NOT NULL, "date" timestamp with time zone NOT NULL, "address" varchar(75) NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE TABLE "data_police911call" ("id" serial NOT NULL PRIMARY KEY, "general_offense_number" bigint NOT NULL UNIQUE, "description" varchar(75) NOT NULL, "group_id" integer NOT NULL, "date" timestamp with time zone NOT NULL, "address" varchar(75) NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE TABLE "data_policeeventgroup" ("id" serial NOT NULL PRIMARY KEY, "description" varchar(40) NOT NULL UNIQUE, "category_id" integer NOT NULL);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_police911incident" ADD CONSTRAINT "group_id_refs_id_2559cc09394813c4" FOREIGN KEY ("group_id") REFERENCES "data_policeeventgroup" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_police911incident_group_id" ON "data_police911incident" ("group_id");" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_police911incident', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_police911incident" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_police911incident_point_id" ON "data_police911incident" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_police911call" ADD CONSTRAINT "group_id_refs_id_28fb582d4a9bc6be" FOREIGN KEY ("group_id") REFERENCES "data_policeeventgroup" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_police911call_group_id" ON "data_police911call" ("group_id");" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_police911call', 'point', 4326, 'POINT', 2);" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_police911call" ALTER "point" SET NOT NULL;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_police911call_point_id" ON "data_police911call" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "ALTER TABLE "data_policeeventgroup" ADD CONSTRAINT "category_id_refs_id_138cc33b3c4fd2e1" FOREIGN KEY ("category_id") REFERENCES "data_policeeventaggregategroup" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
-[06/Jun/2013 20:52:09] DEBUG [south:270] execute "CREATE INDEX "data_policeeventgroup_category_id" ON "data_policeeventgroup" ("category_id");" with params "[]"
-[06/Jun/2013 20:52:09] INFO [data.models:31] New type of fire category: Big Fire
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" DROP CONSTRAINT "value_range_id_refs_id_2f303474afdb8327"" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ALTER COLUMN "value_range_id" TYPE integer, ALTER COLUMN "value_range_id" SET NOT NULL, ALTER COLUMN "value_range_id" SET DEFAULT %s ;" with params "[1]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_buildingpermit" ADD CONSTRAINT "value_range_id_refs_id_2f303474afdb8327" FOREIGN KEY ("value_range_id") REFERENCES "data_permitvalue" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_application_date" ON "data_landpermit" ("application_date");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_permit_number" ON "data_landpermit" ("permit_number");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_value" ON "data_landpermit" ("value");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_landpermit" ADD CONSTRAINT "value_range_id_refs_id_2c7d53aa736a794e" FOREIGN KEY ("value_range_id") REFERENCES "data_permitvalue" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_value_range_id" ON "data_landpermit" ("value_range_id");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_landpermit', 'point', 4326, 'POINT', 2);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_landpermit" ALTER "point" SET NOT NULL;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_landpermit_point_id" ON "data_landpermit" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_violationaggregatecategory" ("id" serial NOT NULL PRIMARY KEY, "category" varchar(40) NOT NULL UNIQUE);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_violation" ("id" serial NOT NULL PRIMARY KEY, "case_number" integer NOT NULL UNIQUE, "address" varchar(100) NOT NULL, "description" text NOT NULL, "group_id" integer NOT NULL, "date_case_created" date NOT NULL, "url" varchar(200) NOT NULL);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_violationcategory" ("id" serial NOT NULL PRIMARY KEY, "category" varchar(40) NOT NULL UNIQUE, "aggregate_id" integer NOT NULL);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_violation" ADD CONSTRAINT "group_id_refs_id_586fbed415b52767" FOREIGN KEY ("group_id") REFERENCES "data_violationcategory" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_violation_group_id" ON "data_violation" ("group_id");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_violation_date_case_created" ON "data_violation" ("date_case_created");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_violation', 'point', 4326, 'POINT', 2);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_violation" ALTER "point" SET NOT NULL;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_violation_point_id" ON "data_violation" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_violationcategory" ADD CONSTRAINT "aggregate_id_refs_id_41755f7195cfb1b5" FOREIGN KEY ("aggregate_id") REFERENCES "data_violationaggregatecategory" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_violationcategory_aggregate_id" ON "data_violationcategory" ("aggregate_id");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_foodviolation" ("id" serial NOT NULL PRIMARY KEY, "name" varchar(100) NOT NULL, "inspection_date" date NOT NULL, "address" varchar(100) NOT NULL, "group_id" integer NOT NULL, "code" varchar(4) NOT NULL, "description" varchar(100) NOT NULL, "violation_num" varchar(10) NOT NULL);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_inspection_date" ON "data_foodviolation" ("inspection_date");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ADD CONSTRAINT "group_id_refs_id_6eb252daa768a021" FOREIGN KEY ("group_id") REFERENCES "data_violationcategory" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_group_id" ON "data_foodviolation" ("group_id");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_foodviolation', 'point', 4326, 'POINT', 2);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ALTER "point" SET NOT NULL;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_foodviolation_point_id" ON "data_foodviolation" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ADD CONSTRAINT "data_foodviolation_violation_num_uniq" UNIQUE ("violation_num")" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ADD COLUMN "violation_type" varchar(4) NOT NULL DEFAULT 'Fake';" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_foodviolation" ALTER COLUMN "violation_type" TYPE varchar(4), ALTER COLUMN "violation_type" SET NOT NULL, ALTER COLUMN "violation_type" DROP DEFAULT;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_policeeventaggregategroup" ("id" serial NOT NULL PRIMARY KEY, "category" varchar(32) NOT NULL UNIQUE);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_police911incident" ("id" serial NOT NULL PRIMARY KEY, "general_offense_number" bigint NOT NULL UNIQUE, "description" varchar(75) NOT NULL, "group_id" integer NOT NULL, "date" timestamp with time zone NOT NULL, "address" varchar(75) NOT NULL);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_police911call" ("id" serial NOT NULL PRIMARY KEY, "general_offense_number" bigint NOT NULL UNIQUE, "description" varchar(75) NOT NULL, "group_id" integer NOT NULL, "date" timestamp with time zone NOT NULL, "address" varchar(75) NOT NULL);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE TABLE "data_policeeventgroup" ("id" serial NOT NULL PRIMARY KEY, "description" varchar(40) NOT NULL UNIQUE, "category_id" integer NOT NULL);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_police911incident" ADD CONSTRAINT "group_id_refs_id_2559cc09394813c4" FOREIGN KEY ("group_id") REFERENCES "data_policeeventgroup" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_police911incident_group_id" ON "data_police911incident" ("group_id");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_police911incident', 'point', 4326, 'POINT', 2);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_police911incident" ALTER "point" SET NOT NULL;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_police911incident_point_id" ON "data_police911incident" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_police911call" ADD CONSTRAINT "group_id_refs_id_28fb582d4a9bc6be" FOREIGN KEY ("group_id") REFERENCES "data_policeeventgroup" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_police911call_group_id" ON "data_police911call" ("group_id");" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "SELECT AddGeometryColumn('data_police911call', 'point', 4326, 'POINT', 2);" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_police911call" ALTER "point" SET NOT NULL;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_police911call_point_id" ON "data_police911call" USING GIST ( "point" GIST_GEOMETRY_OPS );" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "ALTER TABLE "data_policeeventgroup" ADD CONSTRAINT "category_id_refs_id_138cc33b3c4fd2e1" FOREIGN KEY ("category_id") REFERENCES "data_policeeventaggregategroup" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
+[12/Jun/2013 10:08:15] DEBUG [south:270] execute "CREATE INDEX "data_policeeventgroup_category_id" ON "data_policeeventgroup" ("category_id");" with params "[]"
+[12/Jun/2013 10:08:16] INFO [data.models:31] New type of fire category: Big Fire
