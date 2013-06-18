@@ -4,6 +4,10 @@
 
 {% block title %}{{ neighborhood_name }} - {{date_object|date:"F d, Y"}}{% endblock title %}
 
+{% block css_overrides %}
+{% endblock %}
+
+
 {% block content %}
   <div class="hero-unit">
     <h1 class="headline">{{date_label}} in {{ neighborhood_name }}</h1>
@@ -32,6 +36,8 @@
       </p>
       {% if police_call_count > 0 or police_incident_count > 0 %}
       <div id="police_graph" class="detail_graph"></div>
+      <hr>
+      <div class="detail_button"><a href="{% url hoods.views.police_detail neighborhood date  %}" class="btn">Details</a></div>
       {% endif %}
     </div>
     <div class="span3">
@@ -49,6 +55,8 @@
       </p>
       {% if fire_count > 0 %}
       <div id="fire_detail_graph" class="detail_graph"></div>
+      <hr>
+      <div class="detail_button"><a href="{% url hoods.views.fire_detail neighborhood date  %}" class="btn">Details</a></div>
       {% endif %}
     </div>
     <div class="span3">
@@ -78,6 +86,8 @@
       {% endif %}
       {% if land_permit_count > 0 or building_permit_count > 0 %}
       <div id="permits_detail_graph" class="detail_graph"></div>
+      <hr>
+      <div class="detail_button"><a href="{% url hoods.views.permit_detail neighborhood date  %}" class="btn">Details</a></div>
       {% endif %}
     </div>
     <div class="span3">
@@ -103,187 +113,16 @@
       {% endif %}
       {% if food_violations_count > 0 or code_violations_count > 0 %}
       <div id="violations_detail_graph" class="detail_graph"></div>
+      <hr>
+      <div class="detail_button"><a href="{% url hoods.views.violation_detail neighborhood date  %}" class="btn">Details</a></div>
       {% endif %}
     </div>
   </div>
-  
-  {% if police_call_count > 0 or police_incident_count > 0 %}
-  <div>
-    <h2><img src="{% static "img/icons/police.png" %}" class="service_icon_details">Police Details <span class="toggle"><a href="#" id="toggle_police_details" class="toggle_details">show</a></h2>
-    <hr>
-  </div>
-  <div id="police_details" class="initially_hidden">
-    <ul class="detail_categories">
-      <li><a href="#" class="police_data_type btn btn-primary" value="calls">911 Calls</a></li>
-      <li><a href="#" class="police_data_type btn" value="incidents">Incident Reports</a></li>
-    </ul>
-    <ul class="detail_types">
-      <li><a href="#" class="police_type btn btn-primary" value="police-all">All</a></li>
-      {% for item in police_categories %}
-      <li><a href="#" class="police_type btn" value="police-{{ item|slugify }}">{{ item }}</a></li>
-      {% endfor %}
-    </ul>  
-    <div class="detail_list" id="police_list_calls">
-      {% for call in police_calls %}
-      <div class="row-fluid" value="police-{{ call.group.category.category|slugify }}">
-        <div class="span1 date">
-          {{ call.date|date:"g:i a" }}
-        </div>
-        <div class="span3 address">
-          <a href="https://maps.google.com/maps?q={{call.lat}},{{call.lng}}" target="_blank">{{ call.address }}</a></span>
-        </div>
-        <div class="span8">
-          <span class="police_highlight">{{call.group.description|lower }}:</span> {{ call.description|lower }}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    <div class="detail_list initially_hidden" id="police_list_incidents">
-      {% for incident in police_incidents %}
-      <div class="row-fluid" value="police-{{ incident.group.category.category|slugify }}">
-        <div class="span1 date">
-          {{ incident.date|date:"g:i a" }}
-        </div>
-        <div class="span3 address">
-          <a href="https://maps.google.com/maps?q={{incident.lat}},{{incident.lng}}" target="_blank">{{ incident.address }}</a></span>
-        </div>
-        <div class="span8">
-          <span class="police_highlight">{{incident.group.description|lower }}:</span> {{ incident.description|lower }}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  
-  {% endif %}
-  
-  {% if fire_count > 0 %}
-  <div>
-    <h2><img src="{% static "img/icons/fire.png" %}" class="service_icon_details">Fire Details <a href="#" id="toggle_fire_details" class="toggle_details">show</a></h2>
-    <hr>
-  </div>
-  <div id="fire_details" class="initially_hidden">
-    <ul class="detail_types">
-      <li><a href="#" class="fire_type btn btn-primary" value="fire-all">All</a></li>
-      {% for key, value in fire_detail.items %}
-      {% if value > 0 %}
-      <li><a href="#" class="fire_type btn" value="fire-{{ key|slugify }}">{{ key }}</a></li>
-      {% endif %}
-      {% endfor %}
-    </ul>  
-    <div class="detail_list" id="fire_list">
-      {% for fire in fires %}
-      <div class="row-fluid" value="fire-{{ fire.incident_category.aggregate.description|slugify }}">
-        <div class="span1 date">
-          {{ fire.date|date:"g:i a" }}
-        </div>
-        <div class="span3 address">
-          <a href="https://maps.google.com/maps?q={{fire.lat}},{{fire.lng}}" target="_blank">{{ fire.address }}</a>
-        </div>
-        <div class="span8">
-          {{ fire.incident_category.description }}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
-  
-  {% if land_permit_count > 0 or building_permit_count > 0 %}
-  <div>
-    <h2><img src="{% static "img/icons/permit.png" %}" class="service_icon_details">Permit Details <a href="#" id="toggle_permit_details" class="toggle_details">show</a></h2>
-    <hr>
-  </div>
-  <div id="permit_details" class="initially_hidden">
-    {% if land_permit_count > 0 and building_permit_count > 0 %}
-    <ul class="detail_types">
-      <li><a href="#" class="permit_type btn btn-primary" value="permit-all">All</a></li>
-      <li><a href="#" class="permit_type btn" value="permit-land">Land</a></li>
-      <li><a href="#" class="permit_type btn" value="permit-building">Building</a></li>
-    </ul> 
-    {% endif %}
 
-    {% if land_permit_count > 0 %}
-    <div class="detail_list" id="land_list">
-      {% for permit in land_permits %}
-      <div class="row-fluid" value="permit-land">
-        <div class="span2 address">
-          <a href="https://maps.google.com/maps?q={{permit.lat}},{{permit.lng}}" target="_blank">{{ permit.address }}</a>
-        </div>
-        <div class="span2 value">
-          ${{ permit.value|intcomma }}
-        </div>
-        <div class="span8">
-          <span class="permit_highlight">land:</span> {{ permit.description }} <a href="{{permit.url}}" target="_blank">link</a>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-    {% if building_permit_count > 0 %}
-    <div class="detail_list" id="building_list">
-      {% for permit in building_permits %}
-      <div class="row-fluid" value="permit-building">
-        <div class="span2 address">
-          <a href="https://maps.google.com/maps?q={{permit.lat}},{{permit.lng}}" target="_blank">{{ permit.address }}</a>
-        </div>
-        <div class="span2 value">
-          ${{ permit.value|intcomma }}
-        </div>
-        <div class="span8">
-          <span class="permit_highlight">{{ permit.permit_type|lower }}:</span> {{ permit.description }} <a href="{{permit.url}}" target="_blank">link</a>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-  </div>
-  {% endif %}
-  
-  {% if code_violations_count > 0 or food_violations_count > 0 %}
-  <div>
-    <h2><img src="{% static "img/icons/violations.png" %}" class="service_icon_details">Violation Details <a href="#" id="toggle_violation_details" class="toggle_details">show</a></h2>
-    <hr>
-  </div>
-  <div id="violation_details" class="initially_hidden">
-    {% if food_violations_count > 0 %}
-    <p><span class="red">Red</span> food violations must be fixed ASAP or business may be closed.</p>
-    {% endif %}
-    <ul class="detail_types">
-      <li><a href="#" class="violation_type btn btn-primary" value="violation-all">All</a></li>
-      {% for key, value in code_violations_details.items %}
-      {% if value > 0 %}
-      <li><a href="#" class="violation_type btn" value="violation-{{ key|slugify }}">{{ key }}</a></li>
-      {% endif %}
-      {% endfor %}
-    </ul>
-    <div class="detail_list" id="violation_list">
-      {% for violation in code_violations %}
-      <div class="row-fluid" value="violation-{{ violation.group.aggregate.category|slugify }}">
-        <div class="span2 address">
-          <a href="https://maps.google.com/maps?q={{violation.lat}},{{violation.lng}}" target="_blank">{{ violation.address }}</a>
-        </div>
-        <div class="span10">
-          {{ violation.description }} <a href="{{violation.url}}" target="_blank">link</a>
-        </div>
-      </div>
-      {% endfor %}
-      {% for violation in food_violations %}
-      <div class="row-fluid" value="violation-{{ violation.group.aggregate.category|slugify }}">
-        <div class="span2 address">
-          <a href="https://maps.google.com/maps?q={{violation.lat}},{{violation.lng}}" target="_blank">{{ violation.address }}</a>
-        </div>
-        <div class="span10">
-          <span class="{% if violation.violation_type == "red" %}red{% endif %}">{{violation.name}} - {{ violation.description }})</span>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
 {% endblock %}
 
 {% block scripts %}
+<script src="{% static "js/d3.v3.min.js" %}"></script>
 <script>
   $(document).ready(function() {
     var TOP_OFFSET = 15;
@@ -298,193 +137,8 @@
       return 0;
     }
     
-    /* --------- Toggle details -------------------------------*/
-    $('#toggle_police_details').click(function(e) {
-      e.preventDefault();
-      $('#police_details').toggle();
-      
-      if ($('#police_details').is(":visible")) {
-        $('#toggle_police_details').text("hide");
-      } else {
-        $('#toggle_police_details').text("show");
-      }
-      
-      return false;
-    });
-    
-    $('#toggle_fire_details').click(function(e) {
-      e.preventDefault();
-      $('#fire_details').toggle();
-      
-      if ($('#fire_details').is(":visible")) {
-        $('#toggle_fire_details').text("hide");
-      } else {
-        $('#toggle_fire_details').text("show");
-      }
-      
-      return false;
-    });
-    
-    $('#toggle_permit_details').click(function(e) {
-      e.preventDefault();
-      $('#permit_details').toggle();
-      
-      if ($('#permit_details').is(":visible")) {
-        $('#toggle_permit_details').text("hide");
-      } else {
-        $('#toggle_permit_details').text("show");
-      }
-      
-      return false;
-    });
-    
-    $('#toggle_violation_details').click(function(e) {
-      e.preventDefault();
-      $('#violation_details').toggle();
-      
-      if ($('#violation_details').is(":visible")) {
-        $('#toggle_violation_details').text("hide");
-      } else {
-        $('#toggle_violation_details').text("show");
-      }
-      
-      return false;
-    });
-    
-    /* --------- Events on detail button clicks ---------------*/
-    $('.police_data_type').click(function(e) {
-      e.preventDefault();
-      var selected = $(this).attr("value");
-      $('.police_data_type').each(function() {
-        if ($(this).attr("value") == selected) {
-          $(this).addClass("btn-primary");
-        } else {
-          $(this).removeClass("btn-primary");
-        }
-      });
-      
-      if (selected == "calls") {
-        $('#police_list_calls').fadeIn();
-        $('#police_list_incidents').fadeOut();
-      } else {
-        $('#police_list_incidents').fadeIn();
-        $('#police_list_calls').fadeOut();
-      }
-      return false;
-    });
-    
-    $('.police_type').click(function(e) {
-      e.preventDefault();
-      var selected = $(this).attr("value");
-      $('.police_type').each(function() {
-        if ($(this).attr("value") == selected) {
-          $(this).addClass("btn-primary");
-        } else {
-          $(this).removeClass("btn-primary");
-        }
-      })
-      
-      $('#police_list_calls .row-fluid').each(function() {
-        if (selected == 'police-all') {
-          $(this).fadeIn();
-        } else {
-          if ($(this).attr("value") == selected) {
-            $(this).fadeIn();
-          } else {
-            $(this).fadeOut();
-          }
-        }
-      });
-      
-      $('#police_list_incidents .row-fluid').each(function() {
-        if (selected == 'police-all') {
-          $(this).fadeIn();
-        } else {
-          if ($(this).attr("value") == selected) {
-            $(this).fadeIn();
-          } else {
-            $(this).fadeOut();
-          }
-        }
-      });
-      return false;
-    });
-    
-    $('.fire_type').click(function(e) {
-      e.preventDefault();
-      var selected = $(this).attr("value");
-      $('.fire_type').each(function() {
-        if ($(this).attr("value") == selected) {
-          $(this).addClass("btn-primary");
-        } else {
-          $(this).removeClass("btn-primary");
-        }
-      })
-      
-      $('#fire_list .row-fluid').each(function() {
-        if (selected == 'fire-all') {
-          $(this).fadeIn();
-        } else {
-          if ($(this).attr("value") == selected) {
-            $(this).fadeIn();
-          } else {
-            $(this).fadeOut();
-          }
-        }
-      })
-      return false;
-    });
-    
-    $('.permit_type').click(function(e) {
-      e.preventDefault();
-      var selected = $(this).attr("value");
-      $('.permit_type').each(function() {
-        if ($(this).attr("value") == selected) {
-          $(this).addClass("btn-primary");
-        } else {
-          $(this).removeClass("btn-primary");
-        }
-      });
-      
-      if (selected == "permit-all") {
-        $('#land_list').fadeIn();
-        $('#building_list').fadeIn();
-      } else if (selected == "permit-land") {
-        $('#land_list').fadeIn();
-        $('#building_list').fadeOut();
-      } else if (selected == "permit-building") {
-        $('#land_list').fadeOut();
-        $('#building_list').fadeIn();
-      }
-      return false;
-    });
-    
-    $('.violation_type').click(function(e) {
-      e.preventDefault();
-      var selected = $(this).attr("value");
-      $('.violation_type').each(function() {
-        if ($(this).attr("value") == selected) {
-          $(this).addClass("btn-primary");
-        } else {
-          $(this).removeClass("btn-primary");
-        }
-      })
-      
-      $('#violation_list .row-fluid').each(function() {
-        if (selected == 'violation-all') {
-          $(this).fadeIn();
-        } else {
-          if ($(this).attr("value") == selected) {
-            $(this).fadeIn();
-          } else {
-            $(this).fadeOut();
-          }
-        }
-      })
-      return false;
-    });
-    
     /* ----------- Draw graphs -------------------------*/
+    
     {% if police_call_count > 0 or police_incident_count > 0 %}
     var showPolice = true;
     {% else %}
@@ -914,6 +568,7 @@
         .text(function(d) {return d.label});
       
     }
+    
     if (showPolice) {
       drawPoliceGraph();
     }

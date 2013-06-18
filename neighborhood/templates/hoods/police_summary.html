@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load humanize %}
+
+{% block title %}{{ neighborhood_name }} - Police Info - {{date_object|date:"F d, Y"}}{% endblock title %}
+
+{% block css_overrides %}
+<link href="{% static "js/theme/default/style.css" %}" rel="stylesheet" media="screen">
+<style>
+    img.olTileImage {
+        max-width: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="hero-unit">
+    <h1 class="headline">{{date_label}} in {{ neighborhood_name }}</h1>
+  </div>  
+  {% if police_call_count > 0 or police_incident_count > 0 %}
+  <div>
+    <h2><img src="{% static "img/icons/police.png" %}" class="service_icon_details">Police Details</h2>
+    <hr>
+  </div>
+  <div id="police_details">
+    <ul class="detail_categories">
+      <li><a href="#" class="police_data_type btn btn-primary" value="calls">911 Calls</a></li>
+      <li><a href="#" class="police_data_type btn" value="incidents">Incident Reports</a></li>
+    </ul>
+    <ul class="detail_types">
+      <li><a href="#" class="police_type btn btn-primary" value="police-all">All</a></li>
+      {% for item in police_categories %}
+      <li><a href="#" class="police_type btn" value="police-{{ item|slugify }}">{{ item }}</a></li>
+      {% endfor %}
+    </ul>
+    <div class="map_wrapper">
+      <div id="police_map"></div>
+    </div>
+    <div class="detail_list" id="police_list_calls">
+      {% for call in police_calls %}
+      <div class="row-fluid" value="police-{{ call.group.category.category|slugify }}">
+        <div class="span1 date">
+          {{ call.date|date:"g:i a" }}
+        </div>
+        <div class="span3 address">
+          <a href="https://maps.google.com/maps?q={{call.lat}},{{call.lng}}" target="_blank">{{ call.address }}</a></span>
+        </div>
+        <div class="span8">
+          <span class="police_highlight">{{call.group.description|lower }}:</span> {{ call.description|lower }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="detail_list initially_hidden" id="police_list_incidents">
+      {% for incident in police_incidents %}
+      <div class="row-fluid" value="police-{{ incident.group.category.category|slugify }}">
+        <div class="span1 date">
+          {{ incident.date|date:"g:i a" }}
+        </div>
+        <div class="span3 address">
+          <a href="https://maps.google.com/maps?q={{incident.lat}},{{incident.lng}}" target="_blank">{{ incident.address }}</a></span>
+        </div>
+        <div class="span8">
+          <span class="police_highlight">{{incident.group.description|lower }}:</span> {{ incident.description|lower }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div>
+    <h2>No 911 calls to police</h2>
+  </div>
+  {% endif %}
+  
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static "js/OpenLayers.debug.js" %}"></script>
+<script>
+  $(document).ready(function() {
+    var MOBILE_SWITCH = 480;
+    
+    function compare(a,b) {
+      if (a.label < b.label)
+         return -1;
+      if (a.label > b.label)
+        return 1;
+      return 0;
+    }
+    
+    var size = new OpenLayers.Size(18,18); /* Can we instead calculate size of image? */
+    var offset = new OpenLayers.Pixel(-(size.w/2), -(size.h/2));
+    
+    var arrestIcon = new OpenLayers.Icon('{% static "img/markers/dark_blue.png" %}',size,offset);
+    var assaultThreatAndWeaponsIcon = new OpenLayers.Icon('{% static "img/markers/light_blue.png" %}',size,offset);
+    var disturbancesIcon = new OpenLayers.Icon('{% static "img/markers/dark_orange.png" %}',size,offset);
+    var drugsAndLiquorIcon = new OpenLayers.Icon('{% static "img/markers/light_orange.png" %}',size,offset);
+    var falseAlarmIcon = new OpenLayers.Icon('{% static "img/markers/dark_green.png" %}', size, offset);
+    var homicideIcon = new OpenLayers.Icon('{% static "img/markers/light_green.png" %}', size, offset);
+    var mischiefAndSuspiciousPeopleIcon = new OpenLayers.Icon('{% static "img/markers/dark_red.png" %}', size, offset);
+    var otherIcon = new OpenLayers.Icon('{% static "img/markers/light_red.png" %}', size, offset);
+    var prostitutionViceAndGamblingIcon = new OpenLayers.Icon('{% static "img/markers/dark_purple.png" %}', size, offset);
+    var theftOrSimilarIcon = new OpenLayers.Icon('{% static "img/markers/light_purple.png" %}',size,offset);
+    var trafficIcon = new OpenLayers.Icon('{% static "img/markers/dark_brown.png" %}', size, offset);
+    
+    var policeData = [];
+    
+    {% for call in police_calls %}
+    var temp = {
+      'lat':{{ call.lat }},
+      'lng':{{ call.lng }},
+      'policeDataType':'calls',
+      'policeType':'police-{{ call.group.category.category|slugify }}',
+      'time':'{{ call.date|date:"g:i a" }}',
+      'address':'{{ call.address }}',
+      'category':'{{call.group.description|lower }}',
+      'description':'{{ call.description|lower }}'
+    };
+    {% if call.group.category.category == 'Arrest' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{call.lng}},{{call.lat}}), arrestIcon.clone());
+    {% elif call.group.category.category == 'Assault, Threats and Weapons' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{call.lng}},{{call.lat}}), assaultThreatAndWeaponsIcon.clone());
+    {% elif call.group.category.category == 'Disturbances' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{call.lng}},{{call.lat}}), disturbancesIcon.clone());
+    {% elif call.group.category.category == 'Drugs and Liquor' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{call.lng}},{{call.lat}}), drugsAndLiquorIcon.clone());
+    {% elif call.group.category.category == 'False Alarm' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{call.lng}},{{call.lat}}), falseAlarmIcon.clone());
+    {% elif call.group.category.category == 'Homicide' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{call.lng}},{{call.lat}}), homicideIcon.clone());
+    {% elif call.group.category.category == 'Mischief and Suspicious People' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{call.lng}},{{call.lat}}), mischiefAndSuspiciousPeopleIcon.clone());
+    {% elif call.group.category.category == 'Other' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{call.lng}},{{call.lat}}), otherIcon.clone());
+    {% elif call.group.category.category == 'Prostitution, Vice and Gambling' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{call.lng}},{{call.lat}}), prostitutionViceAndGamblingIcon.clone());
+    {% elif call.group.category.category == 'Theft or Similar' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{call.lng}},{{call.lat}}), theftOrSimilarIcon.clone());
+    {% elif call.group.category.category == 'Traffic' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{call.lng}},{{call.lat}}), trafficIcon.clone());
+    {% endif %}
+    policeData.push(temp);
+    {% endfor %}
+    
+    {% for incident in police_incidents %}
+    var temp = {
+      'lat':{{ incident.lat }},
+      'lng':{{ incident.lng }},
+      'policeDataType':'incidents',
+      'policeType':'police-{{ incident.group.category.category|slugify }}',
+      'time':'{{ incident.date|date:"g:i a" }}',
+      'address':'{{ incident.address }}',
+      'category':'{{incident.group.description|lower }}',
+      'description':'{{ incident.description|lower }}'
+    };
+    {% if incident.group.category.category == 'Arrest' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{incident.lng}},{{incident.lat}}), arrestIcon.clone());
+    {% elif incident.group.category.category == 'Assault, Threats and Weapons' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{incident.lng}},{{incident.lat}}), assaultThreatAndWeaponsIcon.clone());
+    {% elif incident.group.category.category == 'Disturbances' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{incident.lng}},{{incident.lat}}), disturbancesIcon.clone());
+    {% elif incident.group.category.category == 'Drugs and Liquor' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{incident.lng}},{{incident.lat}}), drugsAndLiquorIcon.clone());
+    {% elif incident.group.category.category == 'False Alarm' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{incident.lng}},{{incident.lat}}), falseAlarmIcon.clone());
+    {% elif incident.group.category.category == 'Homicide' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{incident.lng}},{{incident.lat}}), homicideIcon.clone());
+    {% elif incident.group.category.category == 'Mischief and Suspicious People' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{incident.lng}},{{incident.lat}}), mischiefAndSuspiciousPeopleIcon.clone());
+    {% elif incident.group.category.category == 'Other' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{incident.lng}},{{incident.lat}}), otherIcon.clone());
+    {% elif incident.group.category.category == 'Prostitution, Vice and Gambling' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{incident.lng}},{{incident.lat}}), prostitutionViceAndGamblingIcon.clone());
+    {% elif incident.group.category.category == 'Theft or Similar' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{incident.lng}},{{incident.lat}}), theftOrSimilarIcon.clone());
+    {% elif incident.group.category.category == 'Traffic' %}
+    temp['marker'] = new OpenLayers.Marker(new OpenLayers.LonLat({{incident.lng}},{{incident.lat}}), trafficIcon.clone());
+    {% endif %}
+    
+    
+    policeData.push(temp);
+    {% endfor %}
+    
+    /* --------- Events on detail button clicks ---------------*/
+    $('.police_data_type').click(function(e) {
+      e.preventDefault();
+      var selected = $(this).attr("value");
+      $('.police_data_type').each(function() {
+        if ($(this).attr("value") == selected) {
+          $(this).addClass("btn-primary");
+        } else {
+          $(this).removeClass("btn-primary");
+        }
+      });
+      
+      if (selected == "calls") {
+        $('#police_list_calls').fadeIn();
+        $('#police_list_incidents').fadeOut();
+      } else {
+        $('#police_list_incidents').fadeIn();
+        $('#police_list_calls').fadeOut();
+      }
+      drawPoliceMap();
+      return false;
+    });
+    
+    $('.police_type').click(function(e) {
+      e.preventDefault();
+      var selected = $(this).attr("value");
+      $('.police_type').each(function() {
+        if ($(this).attr("value") == selected) {
+          $(this).addClass("btn-primary");
+        } else {
+          $(this).removeClass("btn-primary");
+        }
+      drawPoliceMap();
+      })
+      
+      $('#police_list_calls .row-fluid').each(function() {
+        if (selected == 'police-all') {
+          $(this).fadeIn();
+        } else {
+          if ($(this).attr("value") == selected) {
+            $(this).fadeIn();
+          } else {
+            $(this).fadeOut();
+          }
+        }
+      });
+      
+      $('#police_list_incidents .row-fluid').each(function() {
+        if (selected == 'police-all') {
+          $(this).fadeIn();
+        } else {
+          if ($(this).attr("value") == selected) {
+            $(this).fadeIn();
+          } else {
+            $(this).fadeOut();
+          }
+        }
+      });
+      return false;
+    });
+    
+    /* ----------- Draw maps ---------------------------*/
+    function setWidth() {
+      var width = $('.container').width();
+      if (width > 1024) {
+        width = 1024;
+      }
+      var height = width;
+      
+      return [width, height];
+    }
+    
+    function drawPoliceMap() {
+      $('#police_map').empty();
+      
+      var bounds = setWidth();
+      
+      $('#police_map').width(bounds[0]);
+      $('#police_map').height(bounds[1]);
+      
+      var small_map_path = "{% static "img/maps/" %}{{ neighborhood_slug }}-mobile.png";
+      var large_map_path = "{% static "img/maps/" %}{{ neighborhood_slug }}.png";
+      
+      var options = {
+        numZoomLevels: 1,
+        isBaseLayer: true,
+      };
+      
+      var map = new OpenLayers.Map("police_map", {
+        controls: [
+          new OpenLayers.Control.Navigation(),
+          new OpenLayers.Control.Attribution()
+        ],
+      });
+      
+      if (bounds[0] <= MOBILE_SWITCH) {
+        var neighborhood = new OpenLayers.Layer.Image(
+            '{{ neighborhood_name }}',
+            small_map_path,
+            new OpenLayers.Bounds({{ neighborhood_bounds }}),
+            new OpenLayers.Size(bounds[0], bounds[1]),
+            options
+        );
+      } else {
+        var neighborhood = new OpenLayers.Layer.Image(
+            '{{ neighborhood_name }}',
+            large_map_path,
+            new OpenLayers.Bounds({{ neighborhood_bounds }}),
+            new OpenLayers.Size(bounds[0], bounds[1]),
+            options
+        );
+      }
+      console.log("Determining size");
+      console.log(bounds[0]);
+      console.log(bounds[1]);
+      
+      map.addLayer(neighborhood);
+      map.restrictedExtent = new OpenLayers.Bounds({{ neighborhood_bounds }});
+      map.zoomToMaxExtent();
+      
+      {% if neighborhood_outline %}
+      /* Draw neighborhood outline */
+      var outline = '{{ neighborhood_outline.json|safe }}';
+      
+      var geojson_format = new OpenLayers.Format.GeoJSON();
+      var outline_layer = new OpenLayers.Layer.Vector(); 
+      map.addLayer(outline_layer);
+      outline_layer.addFeatures(geojson_format.read(outline));
+      {% endif %}
+      
+      /* Draw map pins */
+      policeDataType = $('.police_data_type.btn-primary').attr('value');
+      policeType = $('.police_type.btn-primary').attr('value');
+      
+      //console.log(policeDataType);
+      //console.log(policeType);
+      //console.log("Enter for loop");
+      
+      var markers = new OpenLayers.Layer.Markers( "Markers" );
+      map.addLayer(markers);
+      
+      //var testSize = new OpenLayers.Size(18,18);
+      //var testOffset = new OpenLayers.Pixel(-(size.w/2), -(size.h/2));
+      //var testIcon = new OpenLayers.Icon('{% static "img/markers/dark_blue.png" %}',size,offset);
+      
+      /*
+      // Add fake icons
+      marker = new OpenLayers.Marker(new OpenLayers.LonLat(-90,-90), arrestIcon);
+      markers.addMarker(marker)
+      marker = new OpenLayers.Marker(new OpenLayers.LonLat(-90,-90), assaultThreatAndWeaponsIcon);
+      markers.addMarker(marker)
+      marker = new OpenLayers.Marker(new OpenLayers.LonLat(-90,-90), disturbancesIcon);
+      markers.addMarker(marker)
+      marker = new OpenLayers.Marker(new OpenLayers.LonLat(-90,-90), drugsAndLiquorIcon);
+      markers.addMarker(marker)
+      marker = new OpenLayers.Marker(new OpenLayers.LonLat(-90,-90), falseAlarmIcon);
+      markers.addMarker(marker)
+      marker = new OpenLayers.Marker(new OpenLayers.LonLat(-90,-90), homicideIcon);
+      markers.addMarker(marker)
+      marker = new OpenLayers.Marker(new OpenLayers.LonLat(-90,-90), mischiefAndSuspiciousPeopleIcon);
+      markers.addMarker(marker)
+      marker = new OpenLayers.Marker(new OpenLayers.LonLat(-90,-90), otherIcon);
+      markers.addMarker(marker)
+      marker = new OpenLayers.Marker(new OpenLayers.LonLat(-90,-90), prostitutionViceAndGamblingIcon);
+      markers.addMarker(marker)
+      marker = new OpenLayers.Marker(new OpenLayers.LonLat(-90,-90), theftOrSimilarIcon);
+      markers.addMarker(marker)
+      marker = new OpenLayers.Marker(new OpenLayers.LonLat(-90,-90), trafficIcon);
+      markers.addMarker(marker)
+      */
+      //marker = new OpenLayers.Marker(new OpenLayers.LonLat(-122.375,47.662),testIcon);
+      //markers.addMarker(marker);
+      
+      
+      for (var i = 0; i < policeData.length; i++) {
+        var matchPoliceDataType = false;
+        var matchPoliceType = false;
+        
+        //console.log(policeDataType);
+        //console.log(policeData[i].policeDataType);
+        //console.log(policeType);
+        //console.log(policeData[i].policeType);
+        
+        if (policeData[i].policeDataType == policeDataType) {
+          matchPoliceDataType = true;
+        }
+        
+        if (policeType == 'police-all') {
+          matchPoliceType = true;
+        } else {
+          if (policeType == policeData[i].policeType) {
+            matchPoliceType = true;
+          }
+        }
+        
+        if (matchPoliceDataType == true && matchPoliceType == true) {
+          //console.log("try to add marker");
+          console.log(policeData[i].lat + " " + policeData[i].lng);
+          //console.log(policeData[i].marker);
+          markers.addMarker(policeData[i].marker);
+        }
+        //console.log(matchPoliceDataType);
+        //console.log(matchPoliceType);
+      }
+    }
+    
+    drawPoliceMap();
+    
+    $(window).resize(function() {
+      drawPoliceMap();
+    });
+  });
+</script>
+{% endblock %}

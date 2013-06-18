@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load humanize %}
+
+{% block title %}{{ neighborhood_name }} - Fire Info - {{date_object|date:"F d, Y"}}{% endblock title %}
+
+{% block css_overrides %}
+{% endblock %}
+
+{% block content %}
+  <div class="hero-unit">
+    <h1 class="headline">{{date_label}} in {{ neighborhood_name }}</h1>
+  </div>  
+  {% if fire_count > 0 %}
+  <div>
+    <h2><img src="{% static "img/icons/fire.png" %}" class="service_icon_details">Fire Details</h2>
+    <hr>
+  </div>
+  <div id="fire_details">
+    <ul class="detail_types">
+      <li><a href="#" class="fire_type btn btn-primary" value="fire-all">All</a></li>
+      {% for key, value in fire_detail.items %}
+      {% if value > 0 %}
+      <li><a href="#" class="fire_type btn" value="fire-{{ key|slugify }}">{{ key }}</a></li>
+      {% endif %}
+      {% endfor %}
+    </ul>  
+    <div class="map_wrapper">
+      <div id="fire_map"></div>
+    </div>
+    <div class="detail_list" id="fire_list">
+      {% for fire in fires %}
+      <div class="row-fluid" value="fire-{{ fire.incident_category.aggregate.description|slugify }}">
+        <div class="span1 date">
+          {{ fire.date|date:"g:i a" }}
+        </div>
+        <div class="span3 address">
+          <a href="https://maps.google.com/maps?q={{fire.lat}},{{fire.lng}}" target="_blank">{{ fire.address }}</a>
+        </div>
+        <div class="span8">
+          {{ fire.incident_category.description }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div>
+    <h2>No 911 calls to fire department</h2>
+  </div>
+  {% endif %}
+  
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static "js/OpenLayers.debug.js" %}"></script>
+<script>
+  $(document).ready(function() {
+    var MOBILE_SWITCH = 480;
+    
+    function compare(a,b) {
+      if (a.label < b.label)
+         return -1;
+      if (a.label > b.label)
+        return 1;
+      return 0;
+    }
+    
+    /* --------- Events on detail button clicks ---------------*/
+    $('.fire_type').click(function(e) {
+      e.preventDefault();
+      var selected = $(this).attr("value");
+      $('.fire_type').each(function() {
+        if ($(this).attr("value") == selected) {
+          $(this).addClass("btn-primary");
+        } else {
+          $(this).removeClass("btn-primary");
+        }
+      })
+      
+      $('#fire_list .row-fluid').each(function() {
+        if (selected == 'fire-all') {
+          $(this).fadeIn();
+        } else {
+          if ($(this).attr("value") == selected) {
+            $(this).fadeIn();
+          } else {
+            $(this).fadeOut();
+          }
+        }
+      });
+      return false;
+    });
+  });
+    /* ----------- Draw maps ---------------------------*/
+</script>
+{% endblock %}

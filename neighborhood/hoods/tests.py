@@ -6,6 +6,8 @@ import pytz
 from django.contrib.gis.db import models
 from django.utils import unittest
 from django.contrib.gis.geos import fromstr
+from django.core.urlresolvers import reverse
+from django.test.client import Client
 
 from hoods.models import Neighborhood
 from data.models import FireIncidentAggregateType, FireIncidentType, Fire
@@ -13,10 +15,11 @@ from data.models import PermitValue, BuildingPermit, LandPermit
 from data.models import ViolationAggregateCategory, ViolationCategory, Violation, FoodViolation
 from data.models import PoliceEventAggregateGroup, PoliceEventGroup, Police911Call, Police911Incident
 
-from hoods.views import calculate_neighborhood, calculate_date, is_weekend, get_details
+from hoods.views import calculate_neighborhood, calculate_date, is_weekend, get_police_details, get_fire_details, get_permit_details, get_violation_details
 import hoods.load as neighborhood_loader
 from data.load import create_permit_ranges, create_violation_aggregates, create_police_aggregates
 from hoods.utils import haversine
+from hoods.osm_utils import seattle_square_bounds
 
 pacific = pytz.timezone('US/Pacific')
 
@@ -261,64 +264,88 @@ class NeighborhoodTestCase(unittest.TestCase):
         ballard = Neighborhood.objects.get(name='Ballard')
         today = (self.yesterday + datetime.timedelta(1)).date()
         
-        ballard_objs_today = get_details(today, ballard)
-        self.assertEqual(ballard_objs_today[0].count(), 0) # Fires
-        self.assertEqual(ballard_objs_today[2].count(), 0) # Building Permits
-        self.assertEqual(ballard_objs_today[4].count(), 0) # Land Use Permits
-        self.assertEqual(ballard_objs_today[6].count(), 0) # Code Violations
-        self.assertEqual(ballard_objs_today[8].count(), 0) # Food Violations
-        self.assertEqual(ballard_objs_today[9].count(), 0) # Police 911 Calls
-        self.assertEqual(ballard_objs_today[11].count(), 0) # Police 911 Incidents
+        ballard_fire_objs_today = get_fire_details(today, ballard)
+        self.assertEqual(ballard_fire_objs_today[0].count(), 0) # Fires
         
-        seattle_objs_today = get_details(today)
-        self.assertEqual(seattle_objs_today[0].count(), 0) # Fires
-        self.assertEqual(seattle_objs_today[2].count(), 0) # Building Permits
-        self.assertEqual(seattle_objs_today[4].count(), 0) # Land Use Permits
-        self.assertEqual(seattle_objs_today[6].count(), 0) # Code Violations
-        self.assertEqual(seattle_objs_today[8].count(), 0) # Food Violations
-        self.assertEqual(seattle_objs_today[9].count(), 0) # Police 911 Calls
-        self.assertEqual(seattle_objs_today[11].count(), 0) # Police 911 Incidents
+        ballard_permit_objs_today = get_permit_details(today, ballard)
+        self.assertEqual(ballard_permit_objs_today[0].count(), 0) # Building Permits
+        self.assertEqual(ballard_permit_objs_today[2].count(), 0) # Land Use Permits
         
-        ballard_objs_yesterday = get_details(self.yesterday, ballard)
-        self.assertEqual(ballard_objs_yesterday[0].count(), 1) # Fires
-        self.assertEqual(ballard_objs_yesterday[1]['Other'], 1) # Fire count by category
-        self.assertEqual(ballard_objs_yesterday[2].count(), 1) # Building permits
-        self.assertEqual(ballard_objs_yesterday[3][u'≤$1K'], 1) # Building permit counts by category
-        self.assertEqual(ballard_objs_yesterday[4].count(), 1) # Land use permits
-        self.assertEqual(ballard_objs_yesterday[5][u'≤$1K'], 1) # Land use permit counts by category
-        self.assertEqual(ballard_objs_yesterday[6].count(), 1) # Code violations
-        self.assertEqual(ballard_objs_yesterday[7]['Zoning'], 1) # Code violation counts by category
-        self.assertEqual(ballard_objs_yesterday[7]['Food Inspection'], 1)
-        self.assertEqual(ballard_objs_yesterday[8].count(), 1) # Food violations
-        self.assertEqual(ballard_objs_yesterday[9].count(), 1) # Police 911 Calls
-        self.assertEqual(ballard_objs_yesterday[10]['Homicide'], 1) # Police 911 call counts by category
-        self.assertEqual(ballard_objs_yesterday[11].count(), 1) # Police 911 Incidents
-        self.assertEqual(ballard_objs_yesterday[12]['Homicide'], 1) # Police incident counts by category
+        ballard_violation_objs_today = get_violation_details(today, ballard)
+        self.assertEqual(ballard_violation_objs_today[0].count(), 0) # Code Violations
+        self.assertEqual(ballard_violation_objs_today[2].count(), 0) # Food Violations
+        
+        ballard_police_objs_today = get_police_details(today, ballard)
+        self.assertEqual(ballard_police_objs_today[0].count(), 0) # Police 911 Calls
+        self.assertEqual(ballard_police_objs_today[2].count(), 0) # Police 911 Incidents
+        
+        seattle_fire_objs_today = get_fire_details(today)
+        self.assertEqual(seattle_fire_objs_today[0].count(), 0) # Fires
+        
+        seattle_permit_objs_today = get_permit_details(today)
+        self.assertEqual(seattle_permit_objs_today[0].count(), 0) # Building Permits
+        self.assertEqual(seattle_permit_objs_today[2].count(), 0) # Land Use Permits
+        
+        seattle_violation_objs_today = get_violation_details(today)
+        self.assertEqual(seattle_violation_objs_today[0].count(), 0) # Code Violations
+        self.assertEqual(seattle_violation_objs_today[2].count(), 0) # Food Violations
+        
+        seattle_police_objs_today = get_police_details(today)
+        self.assertEqual(seattle_police_objs_today[0].count(), 0) # Police 911 Calls
+        self.assertEqual(seattle_police_objs_today[2].count(), 0) # Police 911 Incidents
+        
+        ballard_fire_objs_yesterday = get_fire_details(self.yesterday, ballard)
+        self.assertEqual(ballard_fire_objs_yesterday[0].count(), 1) # Fires
+        self.assertEqual(ballard_fire_objs_yesterday[1]['Other'], 1) # Fire count by category
+        
+        ballard_permit_objs_yesterday = get_permit_details(self.yesterday, ballard)
+        self.assertEqual(ballard_permit_objs_yesterday[0].count(), 1) # Building permits
+        self.assertEqual(ballard_permit_objs_yesterday[1][u'≤$1K'], 1) # Building permit counts by category
+        self.assertEqual(ballard_permit_objs_yesterday[2].count(), 1) # Land use permits
+        self.assertEqual(ballard_permit_objs_yesterday[3][u'≤$1K'], 1) # Land use permit counts by category
+        
+        ballard_violation_objs_yesterday = get_violation_details(self.yesterday, ballard)
+        self.assertEqual(ballard_violation_objs_yesterday[0].count(), 1) # Code violations
+        self.assertEqual(ballard_violation_objs_yesterday[1]['Zoning'], 1) # Code violation counts by category
+        self.assertEqual(ballard_violation_objs_yesterday[1]['Food Inspection'], 1)
+        self.assertEqual(ballard_violation_objs_yesterday[2].count(), 1) # Food violations
+        
+        ballard_police_objs_yesterday = get_police_details(self.yesterday, ballard)
+        self.assertEqual(ballard_police_objs_yesterday[0].count(), 1) # Police 911 Calls
+        self.assertEqual(ballard_police_objs_yesterday[1]['Homicide'], 1) # Police 911 call counts by category
+        self.assertEqual(ballard_police_objs_yesterday[2].count(), 1) # Police 911 Incidents
+        self.assertEqual(ballard_police_objs_yesterday[3]['Homicide'], 1) # Police incident counts by category
         
         try:
-            ballard_objs_yesterday[1]['Fire']
+            ballard_fire_objs_yesterday[1]['Fire']
         except KeyError:
             pass
         else:
             self.fail('Expected exception not thrown')
         
-        seattle_objs_yesterday = get_details(self.yesterday)
-        self.assertEqual(seattle_objs_yesterday[0].count(), 2) # Fires
-        self.assertEqual(seattle_objs_yesterday[1]['Other'], 2) # Fire count by category
-        self.assertEqual(seattle_objs_yesterday[2].count(), 2) # Building permits
-        self.assertEqual(seattle_objs_yesterday[3][u'≤$1K'], 2) # Building permit counts by category
-        self.assertEqual(seattle_objs_yesterday[4].count(), 2) # Land use permits
-        self.assertEqual(seattle_objs_yesterday[5][u'≤$1K'], 2) # Land use permit counts by category
-        self.assertEqual(seattle_objs_yesterday[6].count(), 2) # Code violations
-        self.assertEqual(seattle_objs_yesterday[7]['Zoning'], 2) # Code violation counts by category
-        self.assertEqual(seattle_objs_yesterday[7]['Food Inspection'], 2)
-        self.assertEqual(seattle_objs_yesterday[8].count(), 2) # Food violations
-        self.assertEqual(seattle_objs_yesterday[9].count(), 2) # Police 911 Calls
-        self.assertEqual(seattle_objs_yesterday[10]['Homicide'], 2) # Police 911 call counts by category
-        self.assertEqual(seattle_objs_yesterday[11].count(), 2) # Police 911 Incidents
-        self.assertEqual(seattle_objs_yesterday[12]['Homicide'], 2) # Police incident counts by category
+        seattle_fire_objs_yesterday = get_fire_details(self.yesterday)
+        self.assertEqual(seattle_fire_objs_yesterday[0].count(), 2) # Fires
+        self.assertEqual(seattle_fire_objs_yesterday[1]['Other'], 2) # Fire count by category
+        
+        seattle_permit_objs_yesterday = get_permit_details(self.yesterday)
+        self.assertEqual(seattle_permit_objs_yesterday[0].count(), 2) # Building permits
+        self.assertEqual(seattle_permit_objs_yesterday[1][u'≤$1K'], 2) # Building permit counts by category
+        self.assertEqual(seattle_permit_objs_yesterday[2].count(), 2) # Land use permits
+        self.assertEqual(seattle_permit_objs_yesterday[3][u'≤$1K'], 2) # Land use permit counts by category
+        
+        seattle_violation_objs_yesterday = get_violation_details(self.yesterday)
+        self.assertEqual(seattle_violation_objs_yesterday[0].count(), 2) # Code violations
+        self.assertEqual(seattle_violation_objs_yesterday[1]['Zoning'], 2) # Code violation counts by category
+        self.assertEqual(seattle_violation_objs_yesterday[1]['Food Inspection'], 2)
+        self.assertEqual(seattle_violation_objs_yesterday[2].count(), 2) # Food violations
+        
+        seattle_police_objs_yesterday = get_police_details(self.yesterday)
+        self.assertEqual(seattle_police_objs_yesterday[0].count(), 2) # Police 911 Calls
+        self.assertEqual(seattle_police_objs_yesterday[1]['Homicide'], 2) # Police 911 call counts by category
+        self.assertEqual(seattle_police_objs_yesterday[2].count(), 2) # Police 911 Incidents
+        self.assertEqual(seattle_police_objs_yesterday[3]['Homicide'], 2) # Police incident counts by category
     
-
+    
     def test_neighborhood_bounds_works(self):
         atlantic = Neighborhood.objects.get(name="Atlantic")
         belltown = Neighborhood.objects.get(name="Belltown")
@@ -342,6 +369,7 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(bounds[2], 47.573800714661466)
         self.assertEqual(bounds[3], -122.31693951328269)
     
+    
     def test_tilemill_bounding_box_works(self):
         belltown = Neighborhood.objects.get(name="Belltown")
         
@@ -349,7 +377,128 @@ class NeighborhoodTestCase(unittest.TestCase):
         
         self.assertEqual(belltown.tilemill_bounds(), padded_bounds)
     
-
+    
+    def test_seattle_square_bounds_is_square(self):
+        vals = seattle_square_bounds().split(',')
+        delta_lat = abs(float(vals[0]) - float(vals[2]))
+        delta_lng = abs(float(vals[1]) - float(vals[3]))
+        
+        self.assertEqual(abs(delta_lat - delta_lng) < 0.000001, True) # Won't be equal due to floating point math
+    
+    
+    def test_police_detail_view(self):
+        date_string = self.yesterday.strftime("%d%m%Y")
+        
+        path = reverse('hoods.views.police_detail', args=['ballard', date_string])
+        
+        c = Client()
+        
+        response = c.get(path)
+        
+        ballard = Neighborhood.objects.get(name="Ballard")
+        
+        self.assertEqual(response.context['neighborhood_name'], 'Ballard')
+        self.assertEqual(response.context['date_label'], 'Yesterday')
+        self.assertEqual(response.context['date_object'], self.yesterday.date())
+        self.assertEqual(response.context['police_call_count'], 1)
+        self.assertEqual(response.context['police_incident_count'], 1)
+        self.assertEqual(response.context['police_call_detail']['Homicide'], 1)
+        self.assertEqual(response.context['police_incident_detail']['Homicide'], 1)
+        self.assertEqual(response.context['neighborhood_bounds'], ballard.tilemill_bounds())
+        
+    
+    
+    def test_fire_detail_view(self):
+        date_string = self.yesterday.strftime("%d%m%Y")
+        
+        path = reverse('hoods.views.fire_detail', args=['ballard', date_string])
+        
+        c = Client()
+        
+        response = c.get(path)
+        
+        ballard = Neighborhood.objects.get(name="Ballard")
+        
+        self.assertEqual(response.context['neighborhood_name'], 'Ballard')
+        self.assertEqual(response.context['date_label'], 'Yesterday')
+        self.assertEqual(response.context['date_object'], self.yesterday.date())
+        self.assertEqual(response.context['fire_count'], 1)
+        self.assertEqual(response.context['fire_detail']['Other'], 1)
+        self.assertEqual(response.context['neighborhood_bounds'], ballard.tilemill_bounds())
+    
+    
+    def test_permit_detail_view(self):
+        date_string = self.yesterday.strftime("%d%m%Y")
+        
+        path = reverse('hoods.views.permit_detail', args=['ballard', date_string])
+        
+        c = Client()
+        
+        response = c.get(path)
+        
+        ballard = Neighborhood.objects.get(name="Ballard")
+        
+        self.assertEqual(response.context['neighborhood_name'], 'Ballard')
+        self.assertEqual(response.context['date_label'], 'Yesterday')
+        self.assertEqual(response.context['date_object'], self.yesterday.date())
+        self.assertEqual(response.context['land_permit_count'], 1)
+        self.assertEqual(response.context['building_permit_count'], 1)
+        self.assertEqual(response.context['permit_detail'][1]['land'], 1)
+        self.assertEqual(response.context['permit_detail'][1]['building'], 1)
+        self.assertEqual(response.context['neighborhood_bounds'], ballard.tilemill_bounds())
+    
+    
+    def test_violation_detail_view(self):
+        date_string = self.yesterday.strftime("%d%m%Y")
+        
+        path = reverse('hoods.views.violation_detail', args=['ballard', date_string])
+        
+        c = Client()
+        
+        response = c.get(path)
+        
+        ballard = Neighborhood.objects.get(name="Ballard")
+        
+        self.assertEqual(response.context['neighborhood_name'], 'Ballard')
+        self.assertEqual(response.context['date_label'], 'Yesterday')
+        self.assertEqual(response.context['date_object'], self.yesterday.date())
+        self.assertEqual(response.context['code_violations_count'], 1)
+        self.assertEqual(response.context['food_violations_count'], 1)
+        self.assertEqual(response.context['code_violations_details']['Zoning'], 1)
+        self.assertEqual(response.context['code_violations_details']['Food Inspection'], 1)
+        self.assertEqual(response.context['neighborhood_bounds'], ballard.tilemill_bounds())
+    
+    
+    def test_aggregated_detail_view(self):
+        date_string = self.yesterday.strftime("%d%m%Y")
+        
+        path = reverse('hoods.views.detail', args=['ballard', date_string])
+        
+        c = Client()
+        
+        response = c.get(path)
+        
+        ballard = Neighborhood.objects.get(name="Ballard")
+        
+        self.assertEqual(response.context['neighborhood_name'], 'Ballard')
+        self.assertEqual(response.context['neighborhood_slug'], ballard.slug)
+        self.assertEqual(response.context['date_label'], 'Yesterday')
+        self.assertEqual(response.context['date_object'], self.yesterday.date())
+        
+        self.assertEqual(response.context['police_call_count'], 1)
+        self.assertEqual(response.context['police_incident_count'], 1)
+        
+        self.assertEqual(response.context['fire_count'], 1)
+        
+        self.assertEqual(response.context['land_permit_count'], 1)
+        self.assertEqual(response.context['building_permit_count'], 1)
+        
+        self.assertEqual(response.context['code_violations_count'], 1)
+        self.assertEqual(response.context['food_violations_count'], 1)
+        
+        self.assertEqual(response.context['neighborhood_bounds'], ballard.tilemill_bounds())
+    
+    
 class HelperTestCase(unittest.TestCase):
     def test_date_calculation(self):
         """Determine if properly parsing date values"""
@@ -403,6 +552,7 @@ class HelperTestCase(unittest.TestCase):
         self.assertEqual(is_weekend(friday), False)
         self.assertEqual(is_weekend(saturday), True)
         self.assertEqual(is_weekend(sunday), True)
+    
     
     def test_haversine(self):
         lat_a = 51.885

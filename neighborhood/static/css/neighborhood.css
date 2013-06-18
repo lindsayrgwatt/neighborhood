@@ -54,6 +54,13 @@
     font-style: italic;
 }
 
+/**** Maps *******/
+.map_wrapper {
+    clear: both;
+    padding-top: 20px;
+    margin-bottom: 20px;
+}
+
 /**** Graphs ****/
 .detail_graph {
     height: 450px;
@@ -127,6 +134,8 @@ ul.detail_categories li, ul.detail_types li {
     color: #FF9896;
 }
 
-.initially_hidden {
-    display: none;
+.detail_button {
+    width: 50px;
+    margin-left: auto;
+    margin-right: auto;
 }

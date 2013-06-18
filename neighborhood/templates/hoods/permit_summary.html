@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load humanize %}
+
+{% block title %}{{ neighborhood_name }} - Land and Building Permit Info - {{date_object|date:"F d, Y"}}{% endblock title %}
+
+{% block css_overrides %}
+<link href="{% static "js/theme/default/style.css" %}" rel="stylesheet" media="screen">  
+{% endblock %}
+
+{% block content %}
+  <div class="hero-unit">
+    <h1 class="headline">{{date_label}} in {{ neighborhood_name }}</h1>
+  </div>  
+  {% if land_permit_count > 0 or building_permit_count > 0 %}
+  <div>
+    <h2><img src="{% static "img/icons/permit.png" %}" class="service_icon_details">Permit Details</h2>
+    <hr>
+  </div>
+  <div id="permit_details">
+    {% if land_permit_count > 0 and building_permit_count > 0 %}
+    <ul class="detail_types">
+      <li><a href="#" class="permit_type btn btn-primary" value="permit-all">All</a></li>
+      <li><a href="#" class="permit_type btn" value="permit-land">Land</a></li>
+      <li><a href="#" class="permit_type btn" value="permit-building">Building</a></li>
+    </ul> 
+    {% endif %}
+    
+    {% if land_permit_count > 0 %}
+    <div class="detail_list" id="land_list">
+      {% for permit in land_permits %}
+      <div class="row-fluid" value="permit-land">
+        <div class="span2 address">
+          <a href="https://maps.google.com/maps?q={{permit.lat}},{{permit.lng}}" target="_blank">{{ permit.address }}</a>
+        </div>
+        <div class="span2 value">
+          ${{ permit.value|intcomma }}
+        </div>
+        <div class="span8">
+          <span class="permit_highlight">land:</span> {{ permit.description }} <a href="{{permit.url}}" target="_blank">link</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if building_permit_count > 0 %}
+    <div class="detail_list" id="building_list">
+      {% for permit in building_permits %}
+      <div class="row-fluid" value="permit-building">
+        <div class="span2 address">
+          <a href="https://maps.google.com/maps?q={{permit.lat}},{{permit.lng}}" target="_blank">{{ permit.address }}</a>
+        </div>
+        <div class="span2 value">
+          ${{ permit.value|intcomma }}
+        </div>
+        <div class="span8">
+          <span class="permit_highlight">{{ permit.permit_type|lower }}:</span> {{ permit.description }} <a href="{{permit.url}}" target="_blank">link</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div>
+    <h2>No land or building permits issued</h2>
+  </div>
+  {% endif %}
+  
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static "js/OpenLayers.debug.js" %}"></script>
+<script>
+  $(document).ready(function() {
+    var MOBILE_SWITCH = 480;
+    
+    function compare(a,b) {
+      if (a.label < b.label)
+         return -1;
+      if (a.label > b.label)
+        return 1;
+      return 0;
+    }
+    
+    /* --------- Events on detail button clicks ---------------*/
+    $('.permit_type').click(function(e) {
+      e.preventDefault();
+      var selected = $(this).attr("value");
+      $('.permit_type').each(function() {
+        if ($(this).attr("value") == selected) {
+          $(this).addClass("btn-primary");
+        } else {
+          $(this).removeClass("btn-primary");
+        }
+      });
+      
+      if (selected == "permit-all") {
+        $('#land_list').fadeIn();
+        $('#building_list').fadeIn();
+      } else if (selected == "permit-land") {
+        $('#land_list').fadeIn();
+        $('#building_list').fadeOut();
+      } else if (selected == "permit-building") {
+        $('#land_list').fadeOut();
+        $('#building_list').fadeIn();
+      }
+      return false;
+    });
+        
+    /* ----------- Draw maps ---------------------------*/
+  });
+</script>
+{% endblock %}
