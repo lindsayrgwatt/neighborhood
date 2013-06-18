@@ -72,6 +72,18 @@ class Neighborhood(models.Model):
         
         return (new_top, new_right, new_bottom, new_left)
     
+    def lat(self):
+        bottom = self.mpoly.envelope.tuple[0][0][1]
+        top = self.mpoly.envelope.tuple[0][2][1]
+        
+        return (bottom + top)/2
+    
+    def lng(self):
+        left = self.mpoly.envelope.tuple[0][0][0]
+        right = self.mpoly.envelope.tuple[0][1][0]
+        
+        return (left + right)/2
+    
     def tilemill_bounds_2(self):
         """
         Creates the rectangular lat/lng coordinates needed to fit a square pixel map

@@ -77,6 +77,45 @@ def seattle_square_bounds():
     return "%.6f,%.6f,%.6f,%.6f" % (min_lng, min_lat, max_lng, max_lat)
 
 
+def seattle_lat():
+    neighborhoods = Neighborhood.objects.all()
+    
+    bounds = neighborhoods[0].padded_bounds()
+    
+    min_lat = bounds[2]
+    max_lat = bounds[0]
+    
+    for hood in neighborhoods:
+        bounds = hood.padded_bounds()
+        
+        if bounds[2] < min_lat:
+            min_lat = bounds[2]
+        
+        if bounds[0] > max_lat:
+            max_lat = bounds[0]
+    
+    return (max_lat + min_lat)/2
+
+def seattle_lng():
+    neighborhoods = Neighborhood.objects.all()
+    
+    bounds = neighborhoods[0].padded_bounds()
+    
+    min_lng = bounds[3]
+    max_lng = bounds[1]
+    
+    for hood in neighborhoods:
+        bounds = hood.padded_bounds()
+        
+        if bounds[3] < min_lng:
+            min_lng = bounds[3]
+        
+        if bounds[1] > max_lng:
+            max_lng = bounds[1]
+        
+    
+    return (min_lng + max_lng)/2
+
 def tilemill_command_line():
     """
     Creates command-line instructions for rendering individual map pngs via TileMill

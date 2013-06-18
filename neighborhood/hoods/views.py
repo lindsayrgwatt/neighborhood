@@ -9,7 +9,7 @@ from data.models import Fire, FireIncidentAggregateType
 from data.models import BuildingPermit, PermitValue, LandPermit
 from data.models import Violation, ViolationAggregateCategory, FoodViolation
 from data.models import Police911Incident, Police911Call, PoliceEventAggregateGroup
-from hoods.osm_utils import seattle_square_bounds
+from hoods.osm_utils import seattle_square_bounds, seattle_lng, seattle_lat
 
 day_start = datetime.time(0,0,0)
 day_end = datetime.time(23,59,59)
@@ -289,12 +289,16 @@ def police_detail(request, neighborhood, date):
         neighborhood_slug = 'seattle'
         details = get_police_details(validated_date[1])
         neighborhood_bounds = seattle_square_bounds()
-        neighbordhood_outline = False # Don't show outline for all of Seattle
+        lat = seattle_lat()
+        lng = seattle_lng()
+        neighborhood_outline = False # Don't show outline for all of Seattle
     else:
         neighborhood_name = prospective_neighborhood[2].name
         neighborhood_slug = prospective_neighborhood[2].slug
         details = get_police_details(validated_date[1], prospective_neighborhood[2])
         neighborhood_bounds = prospective_neighborhood[2].tilemill_bounds()
+        lat = prospective_neighborhood[2].lat()
+        lng = prospective_neighborhood[2].lng()
         neighborhood_outline = prospective_neighborhood[2].mpoly
         
     
@@ -318,6 +322,8 @@ def police_detail(request, neighborhood, date):
         'police_incidents':details[2],
         'neighborhood_bounds': neighborhood_bounds,
         'neighborhood_outline': neighborhood_outline,
+        'lat':lat,
+        'lng':lng,
     }
     
     return render_to_response('hoods/police_summary.html', context)
