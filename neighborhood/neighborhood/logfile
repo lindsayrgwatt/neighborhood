@@ -155,3 +155,12 @@
 [18/Jun/2013 10:07:00] DEBUG [south:270] execute "ALTER TABLE "data_policeeventgroup" ADD CONSTRAINT "category_id_refs_id_138cc33b3c4fd2e1" FOREIGN KEY ("category_id") REFERENCES "data_policeeventaggregategroup" ("id") DEFERRABLE INITIALLY DEFERRED;" with params "[]"
 [18/Jun/2013 10:07:00] DEBUG [south:270] execute "CREATE INDEX "data_policeeventgroup_category_id" ON "data_policeeventgroup" ("category_id");" with params "[]"
 [18/Jun/2013 10:07:07] INFO [data.models:31] New type of fire category: Big Fire
+[18/Jun/2013 10:28:10] WARNING [django.request:142] Not Found: /favicon.ico
+[18/Jun/2013 10:28:10] WARNING [django.request:142] Not Found: /favicon.ico
+[18/Jun/2013 10:28:16] ERROR [django.request:215] Internal Server Error: /neighborhood/seattle/date/30052013/police/
+Traceback (most recent call last):
+  File "/Users/lindsayrgwatt/.virtualenvs/neighborhood/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+    response = callback(request, *callback_args, **callback_kwargs)
+  File "/Users/lindsayrgwatt/apps/neighborhood_on_dotcloud/neighborhood/hoods/views.py", line 324, in police_detail
+    'neighborhood_outline': neighborhood_outline,
+UnboundLocalError: local variable 'neighborhood_outline' referenced before assignment
