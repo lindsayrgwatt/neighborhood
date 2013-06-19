@@ -9,7 +9,7 @@ from data.models import Fire, FireIncidentAggregateType
 from data.models import BuildingPermit, PermitValue, LandPermit
 from data.models import Violation, ViolationAggregateCategory, FoodViolation
 from data.models import Police911Incident, Police911Call, PoliceEventAggregateGroup
-from hoods.osm_utils import seattle_square_bounds, seattle_lng, seattle_lat
+from hoods.osm_utils import seattle_lng, seattle_lat
 
 day_start = datetime.time(0,0,0)
 day_end = datetime.time(23,59,59)
@@ -211,7 +211,6 @@ def detail(request, neighborhood, date):
         fire_details = get_fire_details(validated_date[1])
         permit_details = get_permit_details(validated_date[1])
         violation_details = get_violation_details(validated_date[1])
-        neighborhood_bounds = seattle_square_bounds()
     else:
         neighborhood_name = prospective_neighborhood[2].name
         neighborhood_slug = prospective_neighborhood[2].slug
@@ -219,7 +218,6 @@ def detail(request, neighborhood, date):
         fire_details = get_fire_details(validated_date[1], prospective_neighborhood[2])
         permit_details = get_permit_details(validated_date[1], prospective_neighborhood[2])
         violation_details = get_violation_details(validated_date[1], prospective_neighborhood[2])
-        neighborhood_bounds = prospective_neighborhood[2].tilemill_bounds()
     
     # Aggregate permits
     keys = [permit.label for permit in PermitValue.objects.all().order_by('value')]
@@ -261,7 +259,6 @@ def detail(request, neighborhood, date):
         'code_violations_details': violation_details[1],
         'code_violations': violation_details[0],
         'food_violations': violation_details[2],
-        'neighborhood_bounds': neighborhood_bounds,
         'date':date,
         'neighborhood':neighborhood,
     }
@@ -288,7 +285,6 @@ def police_detail(request, neighborhood, date):
         neighborhood_name = 'Seattle'
         neighborhood_slug = 'seattle'
         details = get_police_details(validated_date[1])
-        neighborhood_bounds = seattle_square_bounds()
         lat = seattle_lat()
         lng = seattle_lng()
         neighborhood_outline = False # Don't show outline for all of Seattle
@@ -296,7 +292,6 @@ def police_detail(request, neighborhood, date):
         neighborhood_name = prospective_neighborhood[2].name
         neighborhood_slug = prospective_neighborhood[2].slug
         details = get_police_details(validated_date[1], prospective_neighborhood[2])
-        neighborhood_bounds = prospective_neighborhood[2].tilemill_bounds()
         lat = prospective_neighborhood[2].lat()
         lng = prospective_neighborhood[2].lng()
         neighborhood_outline = prospective_neighborhood[2].mpoly
@@ -320,7 +315,6 @@ def police_detail(request, neighborhood, date):
         'police_categories':available_police_categories,
         'police_calls':details[0],
         'police_incidents':details[2],
-        'neighborhood_bounds': neighborhood_bounds,
         'neighborhood_outline': neighborhood_outline,
         'lat':lat,
         'lng':lng,
@@ -348,12 +342,10 @@ def fire_detail(request, neighborhood, date):
         neighborhood_name = 'Seattle'
         neighborhood_slug = 'seattle'
         details = get_fire_details(validated_date[1])
-        neighborhood_bounds = seattle_square_bounds()
     else:
         neighborhood_name = prospective_neighborhood[2].name
         neighborhood_slug = prospective_neighborhood[2].slug
         details = get_fire_details(validated_date[1], prospective_neighborhood[2])
-        neighborhood_bounds = prospective_neighborhood[2].tilemill_bounds()
     
     context = {
         'neighborhood_name': neighborhood_name,
@@ -363,7 +355,6 @@ def fire_detail(request, neighborhood, date):
         'fire_count': details[0].count(),
         'fires': details[0],
         'fire_detail': details[1],
-        'neighborhood_bounds': neighborhood_bounds
     }
     
     return render_to_response('hoods/fire_summary.html', context)
@@ -388,12 +379,10 @@ def permit_detail(request, neighborhood, date):
         neighborhood_name = 'Seattle'
         neighborhood_slug = 'seattle'
         details = get_permit_details(validated_date[1])
-        neighborhood_bounds = seattle_square_bounds()
     else:
         neighborhood_name = prospective_neighborhood[2].name
         neighborhood_slug = prospective_neighborhood[2].slug
         details = get_permit_details(validated_date[1], prospective_neighborhood[2])
-        neighborhood_bounds = prospective_neighborhood[2].tilemill_bounds()
     
     # Aggregate permits
     keys = [permit.label for permit in PermitValue.objects.all().order_by('value')]
@@ -416,7 +405,6 @@ def permit_detail(request, neighborhood, date):
         'land_permits':details[2],
         'building_permits':details[0],
         'weekend': weekend,
-        'neighborhood_bounds': neighborhood_bounds
     }
     
     return render_to_response('hoods/permit_summary.html', context)
@@ -441,12 +429,10 @@ def violation_detail(request, neighborhood, date):
         neighborhood_name = 'Seattle'
         neighborhood_slug = 'seattle'
         details = get_violation_details(validated_date[1])
-        neighborhood_bounds = seattle_square_bounds()
     else:
         neighborhood_name = prospective_neighborhood[2].name
         neighborhood_slug = prospective_neighborhood[2].slug
         details = get_violation_details(validated_date[1], prospective_neighborhood[2])
-        neighborhood_bounds = prospective_neighborhood[2].tilemill_bounds()
     
     context = {
         'neighborhood_name': neighborhood_name,
@@ -459,7 +445,6 @@ def violation_detail(request, neighborhood, date):
         'code_violations_details': details[1],
         'code_violations': details[0],
         'food_violations': details[2],
-        'neighborhood_bounds': neighborhood_bounds
     }
     
     return render_to_response('hoods/violation_summary.html', context)

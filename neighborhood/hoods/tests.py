@@ -19,7 +19,6 @@ from hoods.views import calculate_neighborhood, calculate_date, is_weekend, get_
 import hoods.load as neighborhood_loader
 from data.load import create_permit_ranges, create_violation_aggregates, create_police_aggregates
 from hoods.utils import haversine
-from hoods.osm_utils import seattle_square_bounds
 
 pacific = pytz.timezone('US/Pacific')
 
@@ -370,22 +369,6 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(bounds[3], -122.31693951328269)
     
     
-    def test_tilemill_bounding_box_works(self):
-        belltown = Neighborhood.objects.get(name="Belltown")
-        
-        padded_bounds = "-122.361682,47.601376,-122.335248,47.627810"
-        
-        self.assertEqual(belltown.tilemill_bounds(), padded_bounds)
-    
-    
-    def test_seattle_square_bounds_is_square(self):
-        vals = seattle_square_bounds().split(',')
-        delta_lat = abs(float(vals[0]) - float(vals[2]))
-        delta_lng = abs(float(vals[1]) - float(vals[3]))
-        
-        self.assertEqual(abs(delta_lat - delta_lng) < 0.000001, True) # Won't be equal due to floating point math
-    
-    
     def test_police_detail_view(self):
         date_string = self.yesterday.strftime("%d%m%Y")
         
@@ -404,7 +387,6 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(response.context['police_incident_count'], 1)
         self.assertEqual(response.context['police_call_detail']['Homicide'], 1)
         self.assertEqual(response.context['police_incident_detail']['Homicide'], 1)
-        self.assertEqual(response.context['neighborhood_bounds'], ballard.tilemill_bounds())
         
     
     
@@ -424,7 +406,6 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(response.context['date_object'], self.yesterday.date())
         self.assertEqual(response.context['fire_count'], 1)
         self.assertEqual(response.context['fire_detail']['Other'], 1)
-        self.assertEqual(response.context['neighborhood_bounds'], ballard.tilemill_bounds())
     
     
     def test_permit_detail_view(self):
@@ -445,7 +426,6 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(response.context['building_permit_count'], 1)
         self.assertEqual(response.context['permit_detail'][1]['land'], 1)
         self.assertEqual(response.context['permit_detail'][1]['building'], 1)
-        self.assertEqual(response.context['neighborhood_bounds'], ballard.tilemill_bounds())
     
     
     def test_violation_detail_view(self):
@@ -466,7 +446,6 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(response.context['food_violations_count'], 1)
         self.assertEqual(response.context['code_violations_details']['Zoning'], 1)
         self.assertEqual(response.context['code_violations_details']['Food Inspection'], 1)
-        self.assertEqual(response.context['neighborhood_bounds'], ballard.tilemill_bounds())
     
     
     def test_aggregated_detail_view(self):
@@ -495,8 +474,6 @@ class NeighborhoodTestCase(unittest.TestCase):
         
         self.assertEqual(response.context['code_violations_count'], 1)
         self.assertEqual(response.context['food_violations_count'], 1)
-        
-        self.assertEqual(response.context['neighborhood_bounds'], ballard.tilemill_bounds())
     
     
 class HelperTestCase(unittest.TestCase):

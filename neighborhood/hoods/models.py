@@ -84,45 +84,6 @@ class Neighborhood(models.Model):
         
         return (left + right)/2
     
-    def tilemill_bounds_2(self):
-        """
-        Creates the rectangular lat/lng coordinates needed to fit a square pixel map
-        """
-        bounds = self.padded_bounds()
-        
-        min_lng = bounds[3]
-        min_lat = bounds[2]
-        max_lat = bounds[0]
-        max_lng = bounds[1]
-        
-        if self.wider_than_tall():
-            # Adjust latitude upwards
-            delta = self.width()
-            delta_lat = theta_from_span(delta)
-            min_lat_old = min_lat
-            max_lat_old = max_lat
-            max_lat = (min_lat_old + max_lat_old)/2 + delta_lat/2
-            min_lat = (min_lat_old + max_lat_old)/2 - delta_lat/2
-        else:
-            # Adjust longitude outwards
-            delta = self.height()
-            delta_lng = theta_from_span(delta)
-            min_lng_old = min_lng
-            max_lng_old = max_lng
-            max_lng = (min_lng_old + max_lng_old)/2 + delta_lng/2
-            min_lng = (min_lng_old + max_lng_old)/2 - delta_lng/2
-        
-        return "%.6f,%.6f,%.6f,%.6f" % (min_lng, min_lat, max_lng, max_lat)
-        
-    
-    def tilemill_bounds(self):
-        bounds = self.padded_bounds()
-        
-        min_lng = bounds[3]
-        min_lat = bounds[2]
-        max_lat = bounds[0]
-        max_lng = bounds[1]
-        return "%.6f,%.6f,%.6f,%.6f" % (min_lng, min_lat, max_lng, max_lat)
     
     class Meta:
         ordering = ['name']
