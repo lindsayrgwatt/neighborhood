@@ -8,8 +8,9 @@
 }
 
 .service_icon {
-    height: 48px;
+    height: 58px;
     text-align: center;
+    margin-top: 5px;
 }
 
 .police_icon_spacer {
@@ -31,7 +32,20 @@
     
     .headline_big {
         display:none;
+    }    
+}
+
+@media screen and (min-width: 768px) {
+    .bottom_breaker {
+        display: none;
     }
+}
+
+@media screen and (max-width: 768px) {
+    .detail_breaker {
+        display: none;
+    }
+    .
 }
 
 @media screen and (min-width: 320px) {
@@ -135,7 +149,12 @@ ul.detail_categories li, ul.detail_types li {
 }
 
 .detail_button {
-    width: 50px;
+    width: 150px;
     margin-left: auto;
     margin-right: auto;
+    text-align:center;
+}
+
+.map_holder {
+    border: 1px solid #EEE;
 }

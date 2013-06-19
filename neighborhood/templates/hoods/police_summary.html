@@ -5,11 +5,10 @@
 {% block title %}{{ neighborhood_name }} - Police Info - {{date_object|date:"F d, Y"}}{% endblock title %}
 
 {% block css_overrides %}
-<link href="{% static "js/theme/default/style.css" %}" rel="stylesheet" media="screen">
 <style>
-    img.olTileImage {
-        max-width: none;
-    }
+  #police_map img {
+    max-width: none;
+  }
 </style>
 {% endblock %}
 
@@ -23,6 +22,36 @@
     <hr>
   </div>
   <div id="police_details">
+    <div>
+      <ul class="detail_categories">
+        <li><a href="#" class="police_data_type btn btn-primary" value="calls">911 Calls</a></li>
+        <li><a href="#" class="police_data_type btn" value="incidents">Incident Reports</a></li>
+      </ul>
+    </div>
+    <div style="clear:both;">
+      <div class="btn">
+        <div class="dropdown">
+          <a class="dropdown-toggle" data-toggle="dropdown" role="button" href="#">Pick a Crime Type</a>
+          <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+            <li role="presentation">
+              <a href="#" tabindex="-1" role="menuitem" value="police-murder">Murder</a>
+            </li>
+            <li role="presentation">
+              <a href="#" tabindex="-1" role="menuitem" value="police-kidnapping">Kidnapping</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <ul class="detail_types">
+      <li><a href="#" class="police_type btn btn-primary" value="police-all">All</a></li>
+      {% for item in police_categories %}
+      <li><a href="#" class="police_type btn" value="police-{{ item|slugify }}">{{ item }}</a></li>
+      {% endfor %}
+    </ul>
+    <div class="map_wrapper">
+      <div id="police_map" class="map_holder"></div>
+    </div>
     <ul class="detail_categories">
       <li><a href="#" class="police_data_type btn btn-primary" value="calls">911 Calls</a></li>
       <li><a href="#" class="police_data_type btn" value="incidents">Incident Reports</a></li>
@@ -33,9 +62,6 @@
       <li><a href="#" class="police_type btn" value="police-{{ item|slugify }}">{{ item }}</a></li>
       {% endfor %}
     </ul>
-    <div class="map_wrapper">
-      <div id="police_map"></div>
-    </div>
     <div class="detail_list" id="police_list_calls">
       {% for call in police_calls %}
       <div class="row-fluid" value="police-{{ call.group.category.category|slugify }}">
@@ -82,11 +108,20 @@
 </script>
 <script>
   $(document).ready(function() {
+    // Start bootstrap test
+    $('.dropdown-toggle').dropdown();
+    
+    $("[role='menuitem']").each(function() {
+      $(this).click(function() {
+        console.log($(this).attr('value'));
+      })
+    });
+    // End bootstrap test
+    
     var policeData = [];
     var map;
     var infowindow;
     
-    /* Icons for maps */
     var size = new google.maps.Size(18,18);
     var origin = new google.maps.Point(0,0);
     var anchor = new google.maps.Point(9,9);
@@ -168,98 +203,6 @@
       anchor: anchor
     };
     
-    {% for call in police_calls %}
-    var temp = {
-      'lat':{{ call.lat }},
-      'lng':{{ call.lng }},
-      'policeDataType':'calls',
-      'policeType':'police-{{ call.group.category.category|slugify }}',
-      'time':'{{ call.date|date:"g:i a" }}',
-      'address':'{{ call.address }}',
-      'category':'{{call.group.description|lower }}',
-      'description':'{{ call.description|lower }}'
-    };
-    
-    var myLatLng = new google.maps.LatLng({{ call.lat }}, {{ call.lng }});
-    var marker = new google.maps.Marker({
-      position: myLatLng,
-    });
-    
-    {% if call.group.category.category == 'Arrest' %}
-      marker.setIcon(arrestIcon);
-    {% elif call.group.category.category == 'Assault, Threats and Weapons' %}
-      marker.setIcon(assaultIcon);
-    {% elif call.group.category.category == 'Disturbances' %}
-      marker.setIcon(disturbancesIcon);
-    {% elif call.group.category.category == 'Drugs and Liquor' %}
-      marker.setIcon(drugsIcon);
-    {% elif call.group.category.category == 'False Alarm' %}
-      marker.setIcon(falseIcon);
-    {% elif call.group.category.category == 'Homicide' %}
-      marker.setIcon(homicideIcon);
-    {% elif call.group.category.category == 'Mischief and Suspicious People' %}
-      marker.setIcon(mischiefIcon);
-    {% elif call.group.category.category == 'Other' %}
-      marker.setIcon(otherIcon);
-    {% elif call.group.category.category == 'Prostitution, Vice and Gambling' %}
-      marker.setIcon(prostitutionIcon);
-    {% elif call.group.category.category == 'Theft or Similar' %}
-      marker.setIcon(theftIcon);
-    {% elif call.group.category.category == 'Traffic' %}
-      marker.setIcon(trafficIcon);
-    {% endif %}
-    
-    temp['marker'] = marker;
-    
-    policeData.push(temp);
-    {% endfor %}
-    
-    {% for incident in police_incidents %}
-    var temp = {
-      'lat':{{ incident.lat }},
-      'lng':{{ incident.lng }},
-      'policeDataType':'incidents',
-      'policeType':'police-{{ incident.group.category.category|slugify }}',
-      'time':'{{ incident.date|date:"g:i a" }}',
-      'address':'{{ incident.address }}',
-      'category':'{{incident.group.description|lower }}',
-      'description':'{{ incident.description|lower }}'
-    };
-    
-    var myLatLng = new google.maps.LatLng({{ incident.lat }}, {{ incident.lng }});
-    var marker = new google.maps.Marker({
-      position: myLatLng,
-    });
-    
-    {% if incident.group.category.category == 'Arrest' %}
-      marker.setIcon(arrestIcon);
-    {% elif incident.group.category.category == 'Assault, Threats and Weapons' %}
-      marker.setIcon(assaultIcon);
-    {% elif incident.group.category.category == 'Disturbances' %}
-      marker.setIcon(disturbancesIcon);
-    {% elif incident.group.category.category == 'Drugs and Liquor' %}
-      marker.setIcon(drugsIcon);
-    {% elif incident.group.category.category == 'False Alarm' %}
-      marker.setIcon(falseIcon);
-    {% elif incident.group.category.category == 'Homicide' %}
-      marker.setIcon(homicideIcon);
-    {% elif incident.group.category.category == 'Mischief and Suspicious People' %}
-      marker.setIcon(mischiefIcon);
-    {% elif incident.group.category.category == 'Other' %}
-      marker.setIcon(otherIcon);
-    {% elif incident.group.category.category == 'Prostitution, Vice and Gambling' %}
-      marker.setIcon(prostitutionIcon);
-    {% elif incident.group.category.category == 'Theft or Similar' %}
-      marker.setIcon(theftIcon);
-    {% elif incident.group.category.category == 'Traffic' %}
-      marker.setIcon(trafficIcon);
-    {% endif %}
-    
-    temp['marker'] = marker;
-    
-    policeData.push(temp);
-    {% endfor %}
-    
     /* --------- Events on detail button clicks ---------------*/
     $('.police_data_type').click(function(e) {
       e.preventDefault();
@@ -324,6 +267,8 @@
       var width = $('.container').width();
       if (width > 1024) {
         width = 1024;
+      } else if (width < 280) {
+        width = 280;
       }
       var height = width;
       
@@ -336,20 +281,46 @@
       $('#police_map').width(bounds[0]);
       $('#police_map').height(bounds[1]);
       
+      {% if neighborhood_outline %}
+      var zoom = 15;
+      {% else %}
+      var zoom = 11;
+      {% endif %}
+      
+      // Zoom out by one level if tablet or smaller
+      if (bounds[0] <= 768) {
+        zoom -= 1;
+      }
+      
+      // Zoom out again if mobile device
+      if (bounds[0] <= 480) {
+        zoom -= 1;
+      }
+      
       var mapOptions = {
         center: new google.maps.LatLng({{ lat }}, {{ lng }}),
-        {% if neighborhood_outline %}
-        zoom: 15,
-        {% else %}
-        zoom: 11,
-        {% endif %}
-        mapTypeId: google.maps.MapTypeId.ROADMAP
+        zoom: zoom,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        scrollwheel:false,
+        panControl: false,
+        streetViewControl: false,
+        mapTypeControl:false,
+        zoomControlOptions:{
+            style:google.maps.ZoomControlStyle.SMALL
+        },
       };
       map = new google.maps.Map(document.getElementById("police_map"), mapOptions);
       
-      infowindow = new google.maps.InfoWindow();
+      infowindow = new google.maps.InfoWindow({
+        maxWidth: 250,
+      });
+      
+      google.maps.event.addListener(map, 'click', function() {
+        infowindow.close();
+      });
       
       {% if neighborhood_outline %}
+      /*---- Neighborhood Border ----*/
       var geoJSON = {{ neighborhood_outline.json|safe }};
       
       var coords = geoJSON.coordinates;
@@ -369,26 +340,125 @@
       
       var polygon = new google.maps.Polygon({
         paths: paths,
-        strokeColor: "#FF7800",
+        strokeColor: "#ff7f0e",
         strokeOpacity: 1,
-        strokeWeight: 5,
-        fillColor: "#46461F",
+        strokeWeight: 2,
+        fillColor: "#EEE",
         fillOpacity: 0.25,
       });
       
       polygon.setMap(map);
+      
+      google.maps.event.addListener(polygon, 'click', function() {
+        infowindow.close();
+      });
+      /*---- End Neighborhood Border ----*/
       {% endif %}
+            
+      /*---- Data ----*/
+      {% for call in police_calls %}
+      var temp = {
+        'lat':{{ call.lat }},
+        'lng':{{ call.lng }},
+        'policeDataType':'calls',
+        'policeType':'police-{{ call.group.category.category|slugify }}',
+        'time':'{{ call.date|date:"g:i a" }}',
+        'address':'{{ call.address }}',
+        'category':'{{call.group.description|lower }}',
+        'description':'{{ call.description|lower }}'
+      };
+      
+      var marker = createMarker(temp);
+      
+      temp['marker'] = marker;
+      
+      policeData.push(temp);
+      {% endfor %}
+      
+      {% for incident in police_incidents %}
+      var temp = {
+        'lat':{{ incident.lat }},
+        'lng':{{ incident.lng }},
+        'policeDataType':'incidents',
+        'policeType':'police-{{ incident.group.category.category|slugify }}',
+        'time':'{{ incident.date|date:"g:i a" }}',
+        'address':'{{ incident.address }}',
+        'category':'{{incident.group.description|lower }}',
+        'description':'{{ incident.description|lower }}'
+      };
+      
+      var marker = createMarker(temp);
+      
+      temp['marker'] = marker;
+      
+      policeData.push(temp);
+      {% endfor %}
+      /*---- End Data ----*/
       
       drawPins();
       
+      /*---- Start Events ------*/
       $('.btn').each(function(e) {
         $(this).click(function(e) {
           drawPins();
         });
       });
+      
+      $(window).resize(function () {
+        var bounds = setWidth();
+        
+        $('#police_map').width(bounds[0]);
+        $('#police_map').height(bounds[1]);
+      });
+      /*---- End Events ---------*/
     }
     
     google.maps.event.addDomListener(window, 'load', initialize);
+    
+    function createMarker(policeData) {
+      var marker = new google.maps.Marker({
+          position:new google.maps.LatLng(policeData.lat, policeData.lng),
+          map:map,
+      });
+      
+      if (policeData.policeType === 'police-arrest') {
+        marker.setIcon(arrestIcon);
+      } else if (policeData.policeType === 'police-assault-threats-and-weapons') {
+        marker.setIcon(assaultIcon);
+      } else if (policeData.policeType === 'police-disturbances') {
+        marker.setIcon(disturbancesIcon);
+      } else if (policeData.policeType === 'police-drugs-and-liquor') {
+        marker.setIcon(drugsIcon);
+      } else if (policeData.policeType === 'police-false-alarm') {
+        marker.setIcon(falseIcon);
+      } else if (policeData.policeType === 'police-homicide') {
+        marker.setIcon(homicideIcon);
+      } else if (policeData.policeType === 'police-mischief-and-suspicious-people') {
+        marker.setIcon(mischiefIcon);
+      } else if (policeData.policeType === 'police-other') {
+        marker.setIcon(otherIcon);
+      } else if (policeData.policeType === 'police-prostitution-vice-and-gambling') {
+        marker.setIcon(prostitutionIcon);
+      } else if (policeData.policeType === 'police-theft-or-similar') {
+        marker.setIcon(theftIcon);
+      } else if (policeData.policeType === 'police-traffic') {
+        marker.setIcon(trafficIcon);
+      }
+      
+      google.maps.event.addListener(marker, 'click', function () {
+        if (infowindow.getMap() && infowindow.getPosition() === marker.getPosition()) {
+            infowindow.close();
+        } else {
+          infowindowHTML = '<div><span class="date">' + policeData.time + '</span> <span class="address">' + policeData.address + '</span></div><div><span class="police_highlight">' + policeData.category + '</span> ' + policeData.description + '</span></div>';
+          infowindow.open(map, marker);
+          infowindow.setContent(infowindowHTML);
+          infowindow.setPosition(marker.getPosition());
+        }
+      });
+            
+      marker.setVisible(false);
+      return marker;
+    }
     
     function drawPins() {
       policeDataType = $('.police_data_type.btn-primary').attr('value');
@@ -411,14 +481,9 @@
         }
         
         if (matchPoliceDataType == true && matchPoliceType == true) {
-          contentString = '<div><span class="date">' + policeData[i].time + '</span> <span class="address">' + policeData[i].address + '</span></div><div><span class="police_highlight">' + policeData[i].category + '</span> ' + policeData[i].description + '</span></div>';
-          google.maps.event.addListener(policeData[i].marker, 'click', function(e) {
-            infowindow.setContent(contentString);
-            infowindow.open(map, this);
-          });
-          policeData[i].marker.setMap(map);
+          policeData[i].marker.setVisible(true);
         } else {
-          policeData[i].marker.setMap(null);
+          policeData[i].marker.setVisible(false);
         }
       }
     }

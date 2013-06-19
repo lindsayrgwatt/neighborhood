@@ -36,8 +36,9 @@
       </p>
       {% if police_call_count > 0 or police_incident_count > 0 %}
       <div id="police_graph" class="detail_graph"></div>
-      <hr>
+      <hr class="detail_breaker">
       <div class="detail_button"><a href="{% url hoods.views.police_detail neighborhood date  %}" class="btn">Details</a></div>
+      <hr class="bottom_breaker">
       {% endif %}
     </div>
     <div class="span3">
@@ -115,6 +116,7 @@
       <div id="violations_detail_graph" class="detail_graph"></div>
       <hr>
       <div class="detail_button"><a href="{% url hoods.views.violation_detail neighborhood date  %}" class="btn">Details</a></div>
+      <hr class="bottom_breaker">
       {% endif %}
     </div>
   </div>
