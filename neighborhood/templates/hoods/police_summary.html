@@ -7,7 +7,7 @@
 {% block css_overrides %}
 <style>
   #police_map img {
-    max-width: none;
+    max-width: none; /* Bootstrap fix */
   }
 </style>
 {% endblock %}
@@ -27,21 +27,6 @@
         <li><a href="#" class="police_data_type btn btn-primary" value="calls">911 Calls</a></li>
         <li><a href="#" class="police_data_type btn" value="incidents">Incident Reports</a></li>
       </ul>
-    </div>
-    <div style="clear:both;">
-      <div class="btn">
-        <div class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" role="button" href="#">Pick a Crime Type</a>
-          <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-            <li role="presentation">
-              <a href="#" tabindex="-1" role="menuitem" value="police-murder">Murder</a>
-            </li>
-            <li role="presentation">
-              <a href="#" tabindex="-1" role="menuitem" value="police-kidnapping">Kidnapping</a>
-            </li>
-          </ul>
-        </div>
-      </div>
     </div>
     <ul class="detail_types">
       <li><a href="#" class="police_type btn btn-primary" value="police-all">All</a></li>
@@ -108,16 +93,6 @@
 </script>
 <script>
   $(document).ready(function() {
-    // Start bootstrap test
-    $('.dropdown-toggle').dropdown();
-    
-    $("[role='menuitem']").each(function() {
-      $(this).click(function() {
-        console.log($(this).attr('value'));
-      })
-    });
-    // End bootstrap test
-    
     var policeData = [];
     var map;
     var infowindow;
@@ -487,7 +462,7 @@
         }
       }
     }
-    
+    /* ----------- End drawing maps ---------------------------*/
   });
 </script>
 {% endblock %}

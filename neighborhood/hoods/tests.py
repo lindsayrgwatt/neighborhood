@@ -387,7 +387,9 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(response.context['police_incident_count'], 1)
         self.assertEqual(response.context['police_call_detail']['Homicide'], 1)
         self.assertEqual(response.context['police_incident_detail']['Homicide'], 1)
-        
+        self.assertEqual(response.context['lat'], ballard.lat()),
+        self.assertEqual(response.context['lng'], ballard.lng()),
+        self.assertEqual(response.context['neighborhood_outline'], ballard.mpoly)
     
     
     def test_fire_detail_view(self):
@@ -406,6 +408,9 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(response.context['date_object'], self.yesterday.date())
         self.assertEqual(response.context['fire_count'], 1)
         self.assertEqual(response.context['fire_detail']['Other'], 1)
+        self.assertEqual(response.context['lat'], ballard.lat()),
+        self.assertEqual(response.context['lng'], ballard.lng()),
+        self.assertEqual(response.context['neighborhood_outline'], ballard.mpoly)
     
     
     def test_permit_detail_view(self):
