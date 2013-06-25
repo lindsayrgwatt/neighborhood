@@ -5,7 +5,11 @@
 {% block title %}{{ neighborhood_name }} - Land and Building Permit Info - {{date_object|date:"F d, Y"}}{% endblock title %}
 
 {% block css_overrides %}
-<link href="{% static "js/theme/default/style.css" %}" rel="stylesheet" media="screen">  
+<style>
+  #permit_map img {
+    max-width: none; /* Bootstrap fix */
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -24,6 +28,12 @@
       <li><a href="#" class="permit_type btn" value="permit-land">Land</a></li>
       <li><a href="#" class="permit_type btn" value="permit-building">Building</a></li>
     </ul> 
+    {% endif %}
+    
+    {% if land_permit_count > 0 or building_permit_count > 0 %}
+    <div class="map_wrapper">
+      <div id="permit_map"></div>
+    </div>
     {% endif %}
     
     {% if land_permit_count > 0 %}
@@ -71,18 +81,32 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static "js/OpenLayers.debug.js" %}"></script>
+<script type="text/javascript"
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBaR_OIpyxPvlznW2j6dLQjz8_iFbUp3Ao&sensor=false">
+</script>
 <script>
   $(document).ready(function() {
-    var MOBILE_SWITCH = 480;
+    var permitData = [];
+    var map;
+    var infowindow;
     
-    function compare(a,b) {
-      if (a.label < b.label)
-         return -1;
-      if (a.label > b.label)
-        return 1;
-      return 0;
-    }
+    var size = new google.maps.Size(18,18);
+    var origin = new google.maps.Point(0,0);
+    var anchor = new google.maps.Point(9,9);
+    
+    var landIcon = {
+      url: '{% static "img/markers/dark_blue.png" %}',
+      size: size,
+      origin: origin,
+      anchor: anchor
+    };
+    
+    var buildingIcon = {
+      url: '{% static "img/markers/light_blue.png" %}',
+      size: size,
+      origin: origin,
+      anchor: anchor
+    };
     
     /* --------- Events on detail button clicks ---------------*/
     $('.permit_type').click(function(e) {
@@ -110,6 +134,214 @@
     });
         
     /* ----------- Draw maps ---------------------------*/
+    function setWidth() {
+      var width = $('.container').width();
+      if (width > 1024) {
+        width = 1024;
+      } else if (width < 280) {
+        width = 280;
+      }
+      var height = width;
+      
+      return [width, height];
+    }
+    
+    function initialize() {
+      var bounds = setWidth();
+      
+      $('#permit_map').width(bounds[0]);
+      $('#permit_map').height(bounds[1]);
+      
+      {% if neighborhood_outline %}
+      var zoom = 15;
+      {% else %}
+      var zoom = 11;
+      {% endif %}
+      
+      // Zoom out by one level if tablet or smaller
+      if (bounds[0] <= 768) {
+        zoom -= 1;
+      }
+      
+      // Zoom out again if mobile device
+      if (bounds[0] <= 480) {
+        zoom -= 1;
+      }
+      
+      var mapOptions = {
+        center: new google.maps.LatLng({{ lat }}, {{ lng }}),
+        zoom: zoom,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        scrollwheel:false,
+        panControl: false,
+        streetViewControl: false,
+        mapTypeControl:true,
+        zoomControlOptions:{
+            style:google.maps.ZoomControlStyle.SMALL
+        },
+      };
+      map = new google.maps.Map(document.getElementById("permit_map"), mapOptions);
+      
+      infowindow = new google.maps.InfoWindow({
+        maxWidth: 250,
+      });
+      
+      google.maps.event.addListener(map, 'click', function() {
+        infowindow.close();
+      });
+      
+      {% if neighborhood_outline %}
+      /*---- Neighborhood Border ----*/
+      var geoJSON = {{ neighborhood_outline.json|safe }};
+      
+      var coords = geoJSON.coordinates;
+      var paths = [];
+      
+      for (var i = 0; i < coords.length; i++) {
+        for (var j = 0; j < coords[i].length; j++) {
+          var path = [];
+            for (var k = 0; k < coords[i][j].length; k++) {
+              var ll = new google.maps.LatLng(coords[i][j][k][1],
+      coords[i][j][k][0]);
+              path.push(ll);
+            }
+          paths.push(path);
+        }
+      }
+      
+      var polygon = new google.maps.Polygon({
+        paths: paths,
+        strokeColor: "#ff7f0e",
+        strokeOpacity: 1,
+        strokeWeight: 2,
+        fillColor: "#EEE",
+        fillOpacity: 0.25,
+      });
+      
+      polygon.setMap(map);
+      
+      google.maps.event.addListener(polygon, 'click', function() {
+        infowindow.close();
+      });
+      /*---- End Neighborhood Border ----*/
+      {% endif %}
+            
+      /*---- Data ----*/
+      {% if land_permit_count > 0 %}
+      {% for permit in land_permits %}
+      var temp = {
+        'lat':{{ permit.lat }},
+        'lng':{{ permit.lng }},
+        'permitType':'permit-land',
+        'address':'{{ permit.address }}',
+        'description':'{{permit.description }}',
+        'value': '{{permit.value|intcomma}}',
+        'url':'{{permit.url}}'
+      };
+      
+      var marker = createMarker(temp);
+      
+      temp['marker'] = marker;
+      
+      permitData.push(temp);
+      {% endfor %}
+      {% endif %}
+      
+      {% if building_permit_count > 0 %}
+      {% for permit in building_permits %}
+      var temp = {
+        'lat':{{ permit.lat }},
+        'lng':{{ permit.lng }},
+        'permitType':'permit-building',
+        'address':'{{ permit.address }}',
+        'description':'{{permit.description }}',
+        'value': '{{permit.value|intcomma}}',
+        'url':'{{permit.url}}'
+      };
+      
+      var marker = createMarker(temp);
+      
+      temp['marker'] = marker;
+      
+      permitData.push(temp);
+      {% endfor %}
+      {% endif %}
+      /*---- End Data ----*/
+      
+      drawPins();
+      
+      /*---- Start Events ------*/
+      $('.btn').each(function(e) {
+        $(this).click(function(e) {
+          drawPins();
+        });
+      });
+      
+      $(window).resize(function () {
+        var bounds = setWidth();
+        
+        $('#permit_map').width(bounds[0]);
+        $('#permit_map').height(bounds[1]);
+      });
+      /*---- End Events ---------*/
+    }
+    
+    google.maps.event.addDomListener(window, 'load', initialize);
+    
+    function createMarker(permitData) {
+      var marker = new google.maps.Marker({
+          position:new google.maps.LatLng(permitData.lat, permitData.lng),
+          map:map,
+      });
+      
+      if (permitData.permitType === 'permit-land') {
+        marker.setIcon(landIcon);
+      } else if (permitData.permitType === 'permit-building') {
+        marker.setIcon(buildingIcon);
+      }
+            
+      google.maps.event.addListener(marker, 'click', function () {
+        if (infowindow.getMap() && infowindow.getPosition() === marker.getPosition()) {
+            infowindow.close();
+        } else {
+          infowindowHTML = '<div><span class="value">$' + permitData.value + '</span> <span class="address">' + permitData.address + '</span></div><div><span class="police_highlight">' + permitData.description + '</span> <a href="'+ permitData.url + '" target="_blank">link</a></div>';
+          infowindow.open(map, marker);
+          infowindow.setContent(infowindowHTML);
+          infowindow.setPosition(marker.getPosition());
+        }
+      });
+            
+      marker.setVisible(false);
+      return marker;
+    }
+    
+    function drawPins() {
+      permitType = $('.permit_type.btn-primary').attr('value');
+      
+      // Account for when only one type of permit so refinement buttons don't show
+      if (typeof permitType == 'undefined') {
+        permitType = 'permit-all';
+      }
+      
+      for (var i = 0; i < permitData.length; i++) {
+        var matchPermitType = false;
+        
+        if (permitType == 'permit-all') {
+          matchPermitType = true;
+        } else {
+          if (permitType == permitData[i].permitType) {
+            matchPermitType = true;
+          }
+        }
+        
+        if (matchPermitType == true) {
+          permitData[i].marker.setVisible(true);
+        } else {
+          permitData[i].marker.setVisible(false);
+        }
+      }
+    }
+    /* ----------- End drawing maps ---------------------------*/
   });
 </script>
 {% endblock %}

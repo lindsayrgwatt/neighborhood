@@ -388,10 +388,16 @@ def permit_detail(request, neighborhood, date):
         neighborhood_name = 'Seattle'
         neighborhood_slug = 'seattle'
         details = get_permit_details(validated_date[1])
+        lat = seattle_lat()
+        lng = seattle_lng()
+        neighborhood_outline = False # Don't show outline for all of Seattle
     else:
         neighborhood_name = prospective_neighborhood[2].name
         neighborhood_slug = prospective_neighborhood[2].slug
         details = get_permit_details(validated_date[1], prospective_neighborhood[2])
+        lat = prospective_neighborhood[2].lat()
+        lng = prospective_neighborhood[2].lng()
+        neighborhood_outline = prospective_neighborhood[2].mpoly
     
     # Aggregate permits
     keys = [permit.label for permit in PermitValue.objects.all().order_by('value')]
@@ -414,6 +420,9 @@ def permit_detail(request, neighborhood, date):
         'land_permits':details[2],
         'building_permits':details[0],
         'weekend': weekend,
+        'neighborhood_outline': neighborhood_outline,
+        'lat':lat,
+        'lng':lng,
     }
     
     return render_to_response('hoods/permit_summary.html', context)
