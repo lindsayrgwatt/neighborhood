@@ -104,7 +104,7 @@
     };
     
     var illegalConstructionIcon = {
-      url: '{% static "img/markers/light_blue.png" %}',
+      url: '{% static "img/markers/light_orange.png" %}',
       size: size,
       origin: origin,
       anchor: anchor
@@ -299,7 +299,9 @@
         'violationType':'violation-{{ violation.group.aggregate.category|slugify }}',
         'address':'{{ violation.address }}',
         'description':'{{violation.description }}',
-        'url':'{{violation.url}}'
+        'url':'{{violation.url}}',
+        'violation_type':'{{violation.violation_type}}',
+        'name':'{{violation.name}}'
       };
       
       var marker = createMarker(temp);
@@ -363,7 +365,14 @@
         if (infowindow.getMap() && infowindow.getPosition() === marker.getPosition()) {
             infowindow.close();
         } else {
-          infowindowHTML = '<div><span class="address">' + violationData.address + '</span></div><div><span class="police_highlight">' + violationData.description + '</span> <a href="'+ violationData.url + '" target="_blank">link</a></div>';
+          var infowindowHTML;
+          if (typeof violationData.name == 'undefined') {
+            console.log("Not a food violation");
+            infowindowHTML = '<div><span class="address">' + violationData.address + '</span></div><div><span class="police_highlight">' + violationData.description + '</span> <a href="'+ violationData.url + '" target="_blank">link</a></div>';
+          } else {
+            console.log(violationData.name);
+            infowindowHTML = '<div class="date">' + violationData.name + '</div><div class="address">' + violationData.address + '</div><div><span class="police_highlight">' + violationData.description + '</span> <a href="'+ violationData.url + '" target="_blank">link</a></div>';
+          }
           infowindow.open(map, marker);
           infowindow.setContent(infowindowHTML);
           infowindow.setPosition(marker.getPosition());
