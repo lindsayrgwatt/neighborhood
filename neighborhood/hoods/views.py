@@ -3,6 +3,7 @@ import pytz
 
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
+from django.core.urlresolvers import reverse
 
 from hoods.models import Neighborhood
 from data.models import Fire, FireIncidentAggregateType
@@ -235,6 +236,10 @@ def detail(request, neighborhood, date):
     available_police_categories = list(set(keys).union(set(keys2)))
     available_police_categories.sort()
     
+    # URLs for changing context
+    datestamp = (validated_date[1]).strftime("%d%m%Y")
+    pick_neighborhood = reverse('hoods.views.pick_neighborhood', args=[datestamp])
+    
     context = {
         'neighborhood_name': neighborhood_name,
         'neighborhood_slug' : neighborhood_slug,
@@ -261,6 +266,7 @@ def detail(request, neighborhood, date):
         'food_violations': violation_details[2],
         'date':date,
         'neighborhood':neighborhood,
+        'pick_neighborhood':pick_neighborhood,
     }
     
     return render_to_response('hoods/summary.html', context)
@@ -475,3 +481,32 @@ def violation_detail(request, neighborhood, date):
     }
     
     return render_to_response('hoods/violation_summary.html', context)
+
+
+def pick_neighborhood(request, date):
+    validated_date = calculate_date(date)
+    
+    if not validated_date[0]:
+        return HttpResponse("That's an invalid date. I expect date values of DDMMYYYY or 'yesterday' or 'today'")
+    
+    datestamp = (validated_date[1]).strftime("%d%m%Y")
+    
+    links = {}
+    
+    neighborhoods = Neighborhood.objects.all()
+    
+    for neighborhood in neighborhoods:
+        links[neighborhood.name] = reverse('hoods.views.detail', args=[neighborhood.slug, datestamp])
+    
+    links['Seattle'] = reverse('hoods.views.detail', args=['seattle', datestamp])
+    
+    context = {
+        'links': links,
+    }
+    
+    return render_to_response('hoods/pick_neighborhood.html', context)
+
+
+def pick_date(request, neighborhood):
+    
+    return HttpResponse("Pick the date you want")

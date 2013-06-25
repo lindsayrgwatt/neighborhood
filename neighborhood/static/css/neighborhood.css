@@ -158,3 +158,16 @@ ul.detail_categories li, ul.detail_types li {
 .map_holder {
     border: 1px solid #EEE;
 }
+
+/*---- Select date and neighborhood pages ----*/
+.bigbox {
+    width: 300px;
+    padding-left:10px;
+    padding-right:10px;
+}
+
+.search_holder {
+    width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+}

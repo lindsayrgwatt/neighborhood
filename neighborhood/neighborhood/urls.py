@@ -9,6 +9,9 @@ urlpatterns = patterns('',
 )
 
 urlpatterns += patterns('hoods.views',
+    url(r'^neighborhood/(?P<neighborhood>[\w\-]+)/date/$', 'pick_date'),
+    url(r'^date/(?P<date>\d{8})/neighborhood/$', 'pick_neighborhood'),
+
     url(r'^neighborhood/(?P<neighborhood>[\w\-]+)/date/(?P<date>\d{8})/$', 'detail'),
     url(r'^neighborhood/(?P<neighborhood>[\w\-]+)/date/(?P<date>\d{8})/police/$', 'police_detail'),
     url(r'^neighborhood/(?P<neighborhood>[\w\-]+)/date/(?P<date>\d{8})/fire/$', 'fire_detail'),

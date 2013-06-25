@@ -372,8 +372,8 @@ def get_building_permits_data():
                                                                 'application_date':date,
                                                                 'address':data['address'],
                                                                 'description':data['description'],
-                                                                'value':int(data['value']),
-                                                                'url':data['permit_and_complaint_status_url']['url'],
+                                                                'value':int(float(data['value'])),
+                                                                'url':data['permit_and_complaint_status_url']['url'], # Use float as occasionally get $0.50 or similar
                                                                 'point':point
                                                             })
                     
@@ -494,7 +494,7 @@ def get_land_use_data():
                                                                 'application_date':date,
                                                                 'address':data['address'],
                                                                 'description':data['description'],
-                                                                'value':int(data['value']),
+                                                                'value':int(float(data['value'])),
                                                                 'url':data['permit_and_complaint_status_url']['url'],
                                                                 'point':point
                                                             })

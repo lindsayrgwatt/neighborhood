@@ -485,6 +485,26 @@ class NeighborhoodTestCase(unittest.TestCase):
         
         self.assertEqual(response.context['code_violations_count'], 1)
         self.assertEqual(response.context['food_violations_count'], 1)
+        
+        self.assertEqual(response.context['pick_neighborhood'], reverse('hoods.views.pick_neighborhood', args=[date_string]))
+    
+    
+    def test_neighborhood_selection_view(self):
+        date_string = self.yesterday.strftime("%d%m%Y")
+        
+        path = reverse('hoods.views.pick_neighborhood', args=[date_string])
+        
+        c = Client()
+        
+        response = c.get(path)
+        
+        ballard = Neighborhood.objects.get(name="Ballard")
+        
+        ballard_path = reverse('hoods.views.detail', args=['ballard', date_string])
+        seattle_path = reverse('hoods.views.detail', args=['seattle', date_string])
+        
+        self.assertEqual(response.context['links']['Ballard'], ballard_path)
+        self.assertEqual(response.context['links']['Seattle'], seattle_path)
     
     
 class HelperTestCase(unittest.TestCase):

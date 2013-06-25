@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load humanize %}
+
+{% block title %}Pick A Seattle Neighborhood{% endblock title %}
+
+{% block css_overrides %}
+{% endblock %}
+
+{% block content %}
+<div class="hero-unit">
+  <h1 class="headline">Pick a neighborhood</h1>
+  <div class="headline">Type a name and then wait a second after selecting it</div>
+</div>  
+<div class="search_holder">
+  <input type="text" data-provide="typeahead" class="typeahead bigbox">
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  var neighborhoods = [];
+  var links = [];
+  
+  {% for key, value in links.items %}
+  neighborhoods.push("{{key}}");
+  links.push("{{value}}");
+  {% endfor %}
+  
+  $('.typeahead').typeahead({
+    source: neighborhoods,
+    updater: function(item) {
+      for (i=0;i<neighborhoods.length;i++) {
+        if (neighborhoods[i] == item) {
+          window.location.href=links[i];
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}
