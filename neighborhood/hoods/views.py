@@ -447,10 +447,16 @@ def violation_detail(request, neighborhood, date):
         neighborhood_name = 'Seattle'
         neighborhood_slug = 'seattle'
         details = get_violation_details(validated_date[1])
+        lat = seattle_lat()
+        lng = seattle_lng()
+        neighborhood_outline = False # Don't show outline for all of Seattle
     else:
         neighborhood_name = prospective_neighborhood[2].name
         neighborhood_slug = prospective_neighborhood[2].slug
         details = get_violation_details(validated_date[1], prospective_neighborhood[2])
+        lat = prospective_neighborhood[2].lat()
+        lng = prospective_neighborhood[2].lng()
+        neighborhood_outline = prospective_neighborhood[2].mpoly
     
     context = {
         'neighborhood_name': neighborhood_name,
@@ -463,6 +469,9 @@ def violation_detail(request, neighborhood, date):
         'code_violations_details': details[1],
         'code_violations': details[0],
         'food_violations': details[2],
+        'neighborhood_outline': neighborhood_outline,
+        'lat':lat,
+        'lng':lng,
     }
     
     return render_to_response('hoods/violation_summary.html', context)

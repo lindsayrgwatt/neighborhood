@@ -5,7 +5,11 @@
 {% block title %}{{ neighborhood_name }} - Code Violation Info - {{date_object|date:"F d, Y"}}{% endblock title %}
 
 {% block css_overrides %}
-<link href="{% static "js/theme/default/style.css" %}" rel="stylesheet" media="screen">  
+<style>
+  #violation_map img {
+    max-width: none; /* Bootstrap fix */
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -29,6 +33,9 @@
       {% endif %}
       {% endfor %}
     </ul>
+    <div class="map_wrapper">
+      <div id="violation_map"></div>
+    </div>
     <div class="detail_list" id="violation_list">
       {% for violation in code_violations %}
       <div class="row-fluid" value="violation-{{ violation.group.aggregate.category|slugify }}">
@@ -62,18 +69,88 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static "js/OpenLayers.debug.js" %}"></script>
+<script type="text/javascript"
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBaR_OIpyxPvlznW2j6dLQjz8_iFbUp3Ao&sensor=false">
+</script>
 <script>
   $(document).ready(function() {
-    var MOBILE_SWITCH = 480;
+    var violationData = [];
+    var map;
+    var infowindow;
     
-    function compare(a,b) {
-      if (a.label < b.label)
-         return -1;
-      if (a.label > b.label)
-        return 1;
-      return 0;
-    }
+    var size = new google.maps.Size(18,18);
+    var origin = new google.maps.Point(0,0);
+    var anchor = new google.maps.Point(9,9);
+    
+    var evictionIcon = {
+      url: '{% static "img/markers/dark_blue.png" %}',
+      size: size,
+      origin: origin,
+      anchor: anchor
+    };
+    
+    var foodIcon = {
+      url: '{% static "img/markers/light_blue.png" %}',
+      size: size,
+      origin: origin,
+      anchor: anchor
+    };
+    
+    var housingIcon = {
+      url: '{% static "img/markers/dark_orange.png" %}',
+      size: size,
+      origin: origin,
+      anchor: anchor
+    };
+    
+    var illegalConstructionIcon = {
+      url: '{% static "img/markers/light_blue.png" %}',
+      size: size,
+      origin: origin,
+      anchor: anchor
+    };
+    
+    var noiseIcon = {
+      url: '{% static "img/markers/dark_green.png" %}',
+      size: size,
+      origin: origin,
+      anchor: anchor
+    };
+    
+    var otherIcon = {
+      url: '{% static "img/markers/light_green.png" %}',
+      size: size,
+      origin: origin,
+      anchor: anchor
+    };
+    
+    var permitIcon = {
+      url: '{% static "img/markers/dark_red.png" %}',
+      size: size,
+      origin: origin,
+      anchor: anchor
+    };
+    
+    var vacantBuildingIcon = {
+      url: '{% static "img/markers/light_red.png" %}',
+      size: size,
+      origin: origin,
+      anchor: anchor
+    };
+    
+    var vegetationIcon = {
+      url: '{% static "img/markers/dark_purple.png" %}',
+      size: size,
+      origin: origin,
+      anchor: anchor
+    };
+    
+    var zoningIcon = {
+      url: '{% static "img/markers/light_purple.png" %}',
+      size: size,
+      origin: origin,
+      anchor: anchor
+    };
     
     /* --------- Events on detail button clicks ---------------*/
     $('.violation_type').click(function(e) {
@@ -102,6 +179,223 @@
     });
         
     /* ----------- Draw maps ---------------------------*/
+    function setWidth() {
+      var width = $('.container').width();
+      if (width > 1024) {
+        width = 1024;
+      } else if (width < 280) {
+        width = 280;
+      }
+      var height = width;
+      
+      return [width, height];
+    }
+    
+    function initialize() {
+      var bounds = setWidth();
+      
+      $('#violation_map').width(bounds[0]);
+      $('#violation_map').height(bounds[1]);
+      
+      {% if neighborhood_outline %}
+      var zoom = 15;
+      {% else %}
+      var zoom = 11;
+      {% endif %}
+      
+      // Zoom out by one level if tablet or smaller
+      if (bounds[0] <= 768) {
+        zoom -= 1;
+      }
+      
+      // Zoom out again if mobile device
+      if (bounds[0] <= 480) {
+        zoom -= 1;
+      }
+      
+      var mapOptions = {
+        center: new google.maps.LatLng({{ lat }}, {{ lng }}),
+        zoom: zoom,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        scrollwheel:false,
+        panControl: false,
+        streetViewControl: false,
+        mapTypeControl:true,
+        zoomControlOptions:{
+            style:google.maps.ZoomControlStyle.SMALL
+        },
+      };
+      map = new google.maps.Map(document.getElementById("violation_map"), mapOptions);
+      
+      infowindow = new google.maps.InfoWindow({
+        maxWidth: 250,
+      });
+      
+      google.maps.event.addListener(map, 'click', function() {
+        infowindow.close();
+      });
+      
+      {% if neighborhood_outline %}
+      /*---- Neighborhood Border ----*/
+      var geoJSON = {{ neighborhood_outline.json|safe }};
+      
+      var coords = geoJSON.coordinates;
+      var paths = [];
+      
+      for (var i = 0; i < coords.length; i++) {
+        for (var j = 0; j < coords[i].length; j++) {
+          var path = [];
+            for (var k = 0; k < coords[i][j].length; k++) {
+              var ll = new google.maps.LatLng(coords[i][j][k][1],
+      coords[i][j][k][0]);
+              path.push(ll);
+            }
+          paths.push(path);
+        }
+      }
+      
+      var polygon = new google.maps.Polygon({
+        paths: paths,
+        strokeColor: "#ff7f0e",
+        strokeOpacity: 1,
+        strokeWeight: 2,
+        fillColor: "#EEE",
+        fillOpacity: 0.25,
+      });
+      
+      polygon.setMap(map);
+      
+      google.maps.event.addListener(polygon, 'click', function() {
+        infowindow.close();
+      });
+      /*---- End Neighborhood Border ----*/
+      {% endif %}
+            
+      /*---- Data ----*/
+      {% if code_violations_count > 0 %}
+      {% for violation in code_violations %}
+      var temp = {
+        'lat':{{ violation.lat }},
+        'lng':{{ violation.lng }},
+        'violationType':'violation-{{ violation.group.aggregate.category|slugify }}',
+        'address':'{{ violation.address }}',
+        'description':'{{violation.description }}',
+        'url':'{{violation.url}}'
+      };
+      
+      var marker = createMarker(temp);
+      
+      temp['marker'] = marker;
+      
+      violationData.push(temp);
+      {% endfor %}
+      {% endif %}
+      
+      {% if food_violations_count > 0 %}
+      {% for violation in food_violations %}
+      var temp = {
+        'lat':{{ violation.lat }},
+        'lng':{{ violation.lng }},
+        'violationType':'violation-{{ violation.group.aggregate.category|slugify }}',
+        'address':'{{ violation.address }}',
+        'description':'{{violation.description }}',
+        'url':'{{violation.url}}'
+      };
+      
+      var marker = createMarker(temp);
+      
+      temp['marker'] = marker;
+      
+      violationData.push(temp);
+      {% endfor %}
+      {% endif %}
+      /*---- End Data ----*/
+      
+      drawPins();
+      
+      /*---- Start Events ------*/
+      $('.btn').each(function(e) {
+        $(this).click(function(e) {
+          drawPins();
+        });
+      });
+      
+      $(window).resize(function () {
+        var bounds = setWidth();
+        
+        $('#violation_map').width(bounds[0]);
+        $('#violation_map').height(bounds[1]);
+      });
+      /*---- End Events ---------*/
+    }
+    
+    google.maps.event.addDomListener(window, 'load', initialize);
+    
+    function createMarker(violationData) {
+      var marker = new google.maps.Marker({
+          position:new google.maps.LatLng(violationData.lat, violationData.lng),
+          map:map,
+      });
+      
+      if (violationData.violationType === 'violation-illegal-construction-or-clearing') {
+        marker.setIcon(illegalConstructionIcon);
+      } else if (violationData.violationType === 'violation-housing-code-violation') {
+        marker.setIcon(housingIcon);
+      } else if (violationData.violationType === 'violation-food-inspection') {
+        marker.setIcon(foodIcon);
+      } else if (violationData.violationType === 'violation-vacantunfit-building') {
+        marker.setIcon(vacantBuildingIcon);
+      } else if (violationData.violationType === 'violation-zoning') {
+        marker.setIcon(zoningIcon);
+      } else if (violationData.violationType === 'violation-eviction') {
+        marker.setIcon(evictionIcon);
+      } else if (violationData.violationType === 'violation-vegetation') {
+        marker.setIcon(vegetationIcon);
+      } else if (violationData.violationType === 'violation-noise') {
+        marker.setIcon(noiseIcon);
+      } else if (violationData.violationType === 'violation-other') {
+        marker.setIcon(otherIcon);
+      } else if (violationData.violationType === 'violation-permit-issue') {
+        marker.setIcon(permitIcon);
+      }
+      
+      google.maps.event.addListener(marker, 'click', function () {
+        if (infowindow.getMap() && infowindow.getPosition() === marker.getPosition()) {
+            infowindow.close();
+        } else {
+          infowindowHTML = '<div><span class="address">' + violationData.address + '</span></div><div><span class="police_highlight">' + violationData.description + '</span> <a href="'+ violationData.url + '" target="_blank">link</a></div>';
+          infowindow.open(map, marker);
+          infowindow.setContent(infowindowHTML);
+          infowindow.setPosition(marker.getPosition());
+        }
+      });
+            
+      marker.setVisible(false);
+      return marker;
+    }
+    
+    function drawPins() {
+      violationType = $('.violation_type.btn-primary').attr('value');
+      
+      for (var i = 0; i < violationData.length; i++) {
+        var matchViolationType = false;
+        
+        if (violationType == 'violation-all') {
+          matchViolationType = true;
+        } else {
+          if (violationType == violationData[i].violationType) {
+            matchViolationType = true;
+          }
+        }
+        
+        if (matchViolationType == true) {
+          violationData[i].marker.setVisible(true);
+        } else {
+          violationData[i].marker.setVisible(false);
+        }
+      }
+    }
+    /* ----------- End drawing maps ---------------------------*/
   });
 </script>
 {% endblock %}

@@ -454,6 +454,9 @@ class NeighborhoodTestCase(unittest.TestCase):
         self.assertEqual(response.context['food_violations_count'], 1)
         self.assertEqual(response.context['code_violations_details']['Zoning'], 1)
         self.assertEqual(response.context['code_violations_details']['Food Inspection'], 1)
+        self.assertEqual(response.context['lat'], ballard.lat())
+        self.assertEqual(response.context['lng'], ballard.lng())
+        self.assertEqual(response.context['neighborhood_outline'], ballard.mpoly)
     
     
     def test_aggregated_detail_view(self):
