@@ -232,9 +232,7 @@
       };
       map = new google.maps.Map(document.getElementById("violation_map"), mapOptions);
       
-      infowindow = new google.maps.InfoWindow({
-        maxWidth: 250,
-      });
+      infowindow = new google.maps.InfoWindow();
       
       google.maps.event.addListener(map, 'click', function() {
         infowindow.close();
