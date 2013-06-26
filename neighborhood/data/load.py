@@ -806,7 +806,7 @@ def get_food_violations_data():
     #  "violation_points" : "5"
     # }
     
-    base_url = "http://www.datakc.org/resource/f29f-zza5.json"
+    base_url = "http://data.kingcounty.gov/resource/f29f-zza5.json"
     
     if FoodViolation.objects.count() == 0:
         datestamp = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%F %H:%M:%S")
