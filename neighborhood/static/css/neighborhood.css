@@ -171,3 +171,9 @@ ul.detail_categories li, ul.detail_types li {
     margin-left: auto;
     margin-right: auto;
 }
+
+.date_holder {
+    width: 220px;
+    margin-left:auto;
+    margin-right: auto;
+}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load humanize %}
+
+{% block title %}Pick a Date for {{ neighborhood_name}}{% endblock title %}
+
+{% block css_overrides %}
+<link href="{% static "css/datepicker.css" %}" rel="stylesheet" media="screen">
+{% endblock %}
+
+{% block content %}
+<div class="hero-unit">
+  <h1 class="headline">Pick a date</h1>
+  <div class="headline">For {{ neighborhood_name }}</div>
+</div>  
+
+<div class="date_holder">
+  <div id="datepicker" data-date="{{ yesterday }}" data-date-format="dd-mm-yyyy"></div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static "js/bootstrap-datepicker.js" %}"></script>
+<script>
+  $('#datepicker').datepicker()
+    .on('changeDate', function(e) {
+      var url = '{{ url }}';
+      
+      var date = e.date.getDate() + 1;
+      var month = e.date.getMonth() + 1;
+      var year = e.date.getFullYear();
+      
+      var dateString = "";
+      if (date < 10) {
+        date = '0' + date;
+      }
+      
+      if (month < 10) {
+        month = '0' + month;
+      }
+      
+      dateString = date + '' + month + '' + year;
+      
+      window.location.href=url.replace("yesterday", dateString);
+    });
+</script>
+{% endblock %}

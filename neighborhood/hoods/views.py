@@ -239,6 +239,7 @@ def detail(request, neighborhood, date):
     # URLs for changing context
     datestamp = (validated_date[1]).strftime("%d%m%Y")
     pick_neighborhood = reverse('hoods.views.pick_neighborhood', args=[datestamp])
+    pick_date = reverse('hoods.views.pick_date', args=[neighborhood_slug])
     
     context = {
         'neighborhood_name': neighborhood_name,
@@ -267,6 +268,7 @@ def detail(request, neighborhood, date):
         'date':date,
         'neighborhood':neighborhood,
         'pick_neighborhood':pick_neighborhood,
+        'pick_date':pick_date,
     }
     
     return render_to_response('hoods/summary.html', context)
@@ -508,5 +510,28 @@ def pick_neighborhood(request, date):
 
 
 def pick_date(request, neighborhood):
+    # Check neighborhood & get details
+    prospective_neighborhood = calculate_neighborhood(neighborhood)
     
-    return HttpResponse("Pick the date you want")
+    if not prospective_neighborhood[0]:
+        return HttpResponse("I've no idea what that neighborhood is")
+    
+    
+    if prospective_neighborhood[1]:
+        neighborhood_name = 'Seattle'
+        neighborhood_slug = 'seattle'
+    else:
+        neighborhood_name = prospective_neighborhood[2].name
+        neighborhood_slug = prospective_neighborhood[2].slug
+    
+    url = reverse('hoods.views.detail', args=[neighborhood_slug, 'yesterday']) # If 'yesterday' ever removed from slug, the js will break
+    
+    pacific = pytz.timezone('US/Pacific')
+    
+    context = {
+        'neighborhood_name':neighborhood_name,
+        'url':url,
+        'yesterday':pacific.localize(datetime.datetime.now() - datetime.timedelta(1)).strftime("%d-%m-%Y")
+    }
+    
+    return render_to_response('hoods/pick_date.html', context)
