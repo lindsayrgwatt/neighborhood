@@ -156,6 +156,11 @@
     $('.violation_type').click(function(e) {
       e.preventDefault();
       var selected = $(this).attr("value");
+      
+      if (selected != 'violation-all') {
+        infowindow.close();
+      }
+      
       $('.violation_type').each(function() {
         if ($(this).attr("value") == selected) {
           $(this).addClass("btn-primary");
