@@ -71,7 +71,14 @@ You'll need to update the files in `neighborhood/data/historical/` if you want t
 
 Note that when running locally you should set `DEBUG` to `False` to reduce memory and speed things. And when running in prod I found that I had to run each script individually; the thread would randomly halt otherwise.
 
-I strongly recommend that you load the historical data locally, export them via `psql` and then load those files on the server.
+I strongly recommend that you load the historical data locally, export them via `psql` and then load those files on the server. Here's how:
+* Dump the database locally e.g., `pg_dump -U lindsayrgwatt neighborhood -f ~/Desktop/install.sql`
+* [Copy the files to dotCloud](http://docs.dotcloud.com/guides/copy/): `dotcloud run www "cat > install.sql" < ~/Desktop/install.sql `
+* Log in to database service: `(neighborhood)$dotcloud run db --psql`
+* Confirm that your file `install.sql` is there: `ls`
+* Load the file to the server `psql -U postgres -d neighborhood -f install.sql`
+
+Note: if you use a different `postgres` username on your local machine vs. your dotCloud deployment you will get errors.
 
 ## localhost Gotchas
 
