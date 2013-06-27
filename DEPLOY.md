@@ -189,3 +189,7 @@ dotcloud scale workers:memory=128M
 ```
 
 You'll also likely have to scale the `www` (Python) process to 256MB as well.
+
+### 8.
+
+Don't forget to update your `requirements.txt` if you add another Python app/module. `pip freeze > requirements.txt`

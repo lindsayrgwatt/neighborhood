@@ -11,7 +11,7 @@ TEMPLATE_DEBUG = DEBUG
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'hood',
+        'NAME': 'neighborhood',
         'USER': env['DB_POSTGIS_USER'],
         'PASSWORD': env['DB_POSTGIS_PASSWORD'],
         'HOST': env['DOTCLOUD_DB_SQL_HOST'],
