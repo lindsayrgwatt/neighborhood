@@ -195,7 +195,7 @@ Scale to 128MB by typing this command:
 dotcloud scale workers:memory=128M
 ```
 
-You'll also likely have to scale the `www` (Python) process to 256MB as well.
+You'll also likely have to scale the `www` (Python) process to 256MB as well and the `db` (PostGIS) process to 128M.
 
 ### 8.
 
